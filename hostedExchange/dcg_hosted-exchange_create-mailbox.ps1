@@ -1,5 +1,5 @@
-﻿$firstName = Read-Host -Prompt 'First Name:'
-$lastName = Read-Host -Prompt 'Last Name:'
+﻿# $firstName = Read-Host -Prompt 'First Name:'
+# $lastName = Read-Host -Prompt 'Last Name:'
 $companies = Get-Content companies.txt
 
 # https://docs.microsoft.com/en-us/powershell/scripting/getting-started/cookbooks/selecting-items-from-a-list-box?view=powershell-6
@@ -30,7 +30,7 @@ $form.Controls.Add($CancelButton)
 $label = New-Object System.Windows.Forms.Label
 $label.Location = New-Object System.Drawing.Point(10,20) 
 $label.Size = New-Object System.Drawing.Size(280,20) 
-$label.Text = "Please select a computer:"
+$label.Text = "Please select a company:"
 $form.Controls.Add($label) 
 
 $listBox = New-Object System.Windows.Forms.ListBox 
@@ -38,9 +38,13 @@ $listBox.Location = New-Object System.Drawing.Point(10,40)
 $listBox.Size = New-Object System.Drawing.Size(260,20) 
 $listBox.Height = 80
 
-foreach ($c in $companies):
+$i = 0
+while ($i -lt $companies.length)
+    {
+    $c = $companies[$i]
     [void] $listBox.Items.Add($c)
-
+    $i = $i + 1
+    }
 
 $form.Controls.Add($listBox) 
 
