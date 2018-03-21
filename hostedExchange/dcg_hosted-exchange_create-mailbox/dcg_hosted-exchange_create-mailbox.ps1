@@ -1,5 +1,5 @@
 ﻿Start-Transcript
-# Add-PSSnapin Microsoft.Exchange.Management.PowerShell.E2010
+Add-PSSnapin Microsoft.Exchange.Management.PowerShell.E2010
 
 $firstName = Read-Host "First Name"
 $lastName = Read-Host "Last Name"
@@ -73,12 +73,3 @@ Switch ($yesNo) {
     }
 
 Write-Host "The script has continued on"
-
-# Loop the next few lines until the passwords match
-Do {
-$pw1 = Read-Host "Input a password" -AsSecureString
-$pw2 = Read-Host "Confirm the password" -AsSecureString
-}
-Until ($pw1 == $pw2)
-
-Write-host the passwords match
