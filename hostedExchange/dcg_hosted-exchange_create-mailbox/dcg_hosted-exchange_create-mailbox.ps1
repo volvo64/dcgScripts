@@ -1,12 +1,11 @@
 ﻿Start-Transcript
-Add-PSSnapin Microsoft.Exchange.Management.PowerShell.E2010
+# Add-PSSnapin Microsoft.Exchange.Management.PowerShell.E2010
 
+$workingdir = Split-Path $MyInvocation.MyCommand.Path -Parent #Get current working directory
 $firstName = Read-Host "First Name"
 $lastName = Read-Host "Last Name"
 $companies = Get-Content companies.txt
 $companies = $companies | sort
-
-
 
 # https://docs.microsoft.com/en-us/powershell/scripting/getting-started/cookbooks/selecting-items-from-a-list-box?view=powershell-6
 
@@ -64,7 +63,7 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK)
     $selectedCompany = $listBox.SelectedItem
 }
 
-Write-Host You are going to create a mailbox for $firstName $lastName at $selectedCompany. Are you sure you want to continue?
+Write-Host You are going to create a mailbox for $firstName $lastName at $selectedCompany.
 $yesNo = Read-Host "Are you sure you want to continue? (y/n)"
 Switch ($yesNo) {
     Y {Write-host "Creating mailbox now"}
@@ -72,4 +71,21 @@ Switch ($yesNo) {
     Default {Write-Host "Cancelling"; Exit}
     }
 
-Write-Host "The script has continued on"
+# Loop the next few lines until the passwords match
+Do {
+$pw1 = Read-Host "Input a secure password (The mailbox will not be created if the password is not secure)" -AsSecureString
+$pw2 = Read-Host "Confirm the password" -AsSecureString
+$pwd1_text = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($pw1))
+$pwd2_text = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($pw2))
+}
+Until ($pwd1_text -ceq $pwd2_text)
+
+Write-host The passwords match. Proceeding to create the mailbox now.
+
+$configFile = "$workingdir\conf\$selectedCompany.conf"
+$custAttr1 = Get-Content $configFile | Select-Object -Index 1
+$dn =  Get-Content $configFile | Select-Object -Index 2
+# Write-Host $custAttr1 $dn
+
+# Create the mailbox on this line
+New-Mailbox
