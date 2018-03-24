@@ -4,7 +4,7 @@
 $workingdir = Split-Path $MyInvocation.MyCommand.Path -Parent #Get current working directory
 $firstName = Read-Host "First Name"
 $lastName = Read-Host "Last Name"
-$companies = Get-Content companies.txt
+$companies = Get-Content "$workingdir\companies.txt"
 $companies = $companies | sort
 
 # https://docs.microsoft.com/en-us/powershell/scripting/getting-started/cookbooks/selecting-items-from-a-list-box?view=powershell-6
@@ -85,7 +85,10 @@ Write-host The passwords match. Proceeding to create the mailbox now.
 $configFile = "$workingdir\conf\$selectedCompany.conf"
 $custAttr1 = Get-Content $configFile | Select-Object -Index 1
 $dn =  Get-Content $configFile | Select-Object -Index 2
+$emailPrefix = Get-Content $configFile | Select-Object -Index 4
+$emailPrefix = Invoke-Expression -Command $emailPrefix
+Write-Host $emailPrefix
 # Write-Host $custAttr1 $dn
 
 # Create the mailbox on this line
-New-Mailbox
+# New-Mailbox
