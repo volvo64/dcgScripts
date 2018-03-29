@@ -87,8 +87,8 @@ $custAttr1 = Get-Content $configFile | Select-Object -Index 1
 $dn =  Get-Content $configFile | Select-Object -Index 2
 $emailPrefix = Get-Content $configFile | Select-Object -Index 4
 $emailPrefix = Invoke-Expression -Command $emailPrefix
-Write-Host $emailPrefix
-# Write-Host $custAttr1 $dn
+Write-Host $emailPrefix @ 
+Write-Host $custAttr1 $dn
 
 # Create the mailbox on this line
 # New-Mailbox
