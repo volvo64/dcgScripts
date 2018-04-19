@@ -1,5 +1,5 @@
 ﻿Start-Transcript
-# Add-PSSnapin Microsoft.Exchange.Management.PowerShell.E2010
+Add-PSSnapin Microsoft.Exchange.Management.PowerShell.E2010
 
 $workingdir = Split-Path $MyInvocation.MyCommand.Path -Parent #Get current working directory
 $firstName = Read-Host "First Name"
@@ -72,23 +72,28 @@ Switch ($yesNo) {
     }
 
 # Loop the next few lines until the passwords match
-Do {
-$pw1 = Read-Host "Input a secure password (The mailbox will not be created if the password is not secure)" -AsSecureString
-$pw2 = Read-Host "Confirm the password" -AsSecureString
-$pwd1_text = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($pw1))
-$pwd2_text = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($pw2))
-}
-Until ($pwd1_text -ceq $pwd2_text)
+#Do {
+# $pw1 = Read-Host "Input a secure password (The mailbox will not be created if the password is not secure)" -AsSecureString
+#$pw2 = Read-Host "Confirm the password" -AsSecureString
+#$pwd1_text = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($pw1))
+#$pwd2_text = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($pw2))
+#}
+#Until ($pwd1_text -ceq $pwd2_text)
 
-Write-host The passwords match. Proceeding to create the mailbox now.
+#Write-host The passwords match. Proceeding to create the mailbox now.
 
 $configFile = "$workingdir\conf\$selectedCompany.conf"
 $custAttr1 = Get-Content $configFile | Select-Object -Index 1
 $dn =  Get-Content $configFile | Select-Object -Index 2
 $emailPrefix = Get-Content $configFile | Select-Object -Index 4
 $emailPrefix = Invoke-Expression -Command $emailPrefix
-Write-Host $emailPrefix @ 
+$emailDomain = Get-Content $configFile | Select-Object -Index 3
+$emailDatabase = Get-Content $configFile | Select-Object -Index 5
+$emailABP = Get-Content $configFile | Select-Object -Index 6
+$emailAddress = "$emailPrefix@$emailDomain"
+Write-Host $emailPrefix
 Write-Host $custAttr1 $dn
 
 # Create the mailbox on this line
-# New-Mailbox
+$password = Read-Host "Enter password" -AsSecureString; New-Mailbox -UserPrincipalName $emailAddress -Alias $emailPrefix -Database $emailDatabase -Name $firstName$lastName -OrganizationalUnit $dn  -Password $password -FirstName $firstName -LastName $lastName -DisplayName "$firstName $lastName" -ResetPasswordOnNextLogon $false -AddressBookPolicy $emailABP
+Set-Mailbox $emailaddress -CustomAttribute1 $custAttr1
