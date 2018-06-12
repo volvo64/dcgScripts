@@ -19,7 +19,7 @@ If ($auditType -match 7) {
     Add-Content $logfile "The SSLVPN group to search is $sslvpnGroup"
     }
 
-$filterednames = @("LDAP","vmware","dss","opendns","sp admin","dcg","qbdataservice","sql","st_bernard","hosted","ldapadmin","spadmin","test","noc","st. bernard","st bernard","managed care","bbadmin","besadmin","compliance","discovery","rmmscan","healthmailbox","sharepoint","windows sbs","qbdata","noc_helpdesk","appassure","support","scanner","ftp","app assure","aspnet","Dependable Computer Guys","efax","exchange","INSTALR","IUSR","IWAM","NAV","Quick Books")
+$filterednames = @("guest","LDAP","vmware","dss","opendns","sp admin","dcg","qbdataservice","sql","st_bernard","hosted","ldapadmin","spadmin","test","noc","st. bernard","st bernard","managed care","bbadmin","besadmin","compliance","discovery","rmmscan","healthmailbox","sharepoint","windows sbs","qbdata","noc_helpdesk","appassure","support","scanner","ftp","app assure","aspnet","Dependable Computer Guys","efax","exchange","INSTALR","IUSR","IWAM","NAV","Quick Books")
 $perEnvFilteredNames = get-content $confFile | Select-Object -Index 4
 $perEnvFilteredNames = -split $perEnvFilteredNames
 $filterednames = $filterednames += $perEnvFilteredNames
@@ -62,20 +62,40 @@ If ($auditType -match 1) {
     }
 
 If ($auditType -match 2) {
-    
-    Add-Content $logfile 'Beginning search of RDS Users.'
-        
-    $rdsUsersRaw = (Get-ADGroupMember -Identity $rdsGroup | Get-ADUser | Where {($_.enabled -eq "True")}).name
 
-    $rdsUsersFiltered = $rdsUsersRaw | ? {$_ -notmatch $regex}
-    Add-Content $logfile 'Names of RDS Users:'
-    $rdsUsersFiltered >> $logfile
-    Add-Content $logfile 'Count of RDS Users:'
-    $rdsUsersFiltered.count >> $logfile
-    $rdsUsersFilteredCount = $rdsUsersFiltered.count
-    $rdsUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
-    $rdsUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
+    If ((Get-WmiObject -Class Win32_ComputerSystem).PartOfDomain -eq "True") {
+        Add-Content $logfile "Server is part of a domain"
+    
+        Add-Content $logfile 'Beginning search of RDS Users.'
+        
+        $rdsUsersRaw = (Get-ADGroupMember -Identity $rdsGroup | Get-ADUser | Where {($_.enabled -eq "True")}).name
+
+        $rdsUsersFiltered = $rdsUsersRaw | ? {$_ -notmatch $regex}
+        Add-Content $logfile 'Names of RDS Users:'
+        $rdsUsersFiltered >> $logfile
+        Add-Content $logfile 'Count of RDS Users:'
+        $rdsUsersFiltered.count >> $logfile
+        $rdsUsersFilteredCount = $rdsUsersFiltered.count
+        $rdsUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
+        $rdsUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
+        }
+
+    Else {
+        Add-Content $logfile "Server is part of a workgroup"
+        Add-Content $logfile "Beginning search for RDS Users."
+
+        $rdsUsersRaw = (Get-LocalUser| Where {($_.enabled -eq "True")}).name
+        $rdsUsersFiltered = $rdsUsersRaw | ? {$_ -notmatch $regex}
+        Add-Content $logfile 'Names of RDS Users:'
+        $rdsUsersFiltered >> $logfile
+        Add-Content $logfile 'Count of RDS Users:'
+        $rdsUsersFiltered.count >> $logfile
+        $rdsUsersFilteredCount = $rdsUsersFiltered.count
+        $rdsUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
+        $rdsUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
+        }
     }
+
 
 If ($auditType -match 3) {
     
