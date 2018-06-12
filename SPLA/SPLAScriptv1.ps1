@@ -11,7 +11,7 @@ $companyContactEmail = Get-Content $confFile | Select-Object -Index 3
 $rdsGroup = Get-Content $confFile | Select-Object -Index 5
 Add-Content $logfile "The RDS Group to search is  $rdsGroup"
 
-$filterednames = @("vmware","dss","opendns","sp admin","dcg","qbdataservice","sql","st_bernard","hosted","ldapadmin","spadmin","test","noc","st. bernard","st bernard","managed care","bbadmin","besadmin","compliance","discovery","rmmscan","healthmailbox","sharepoint","windows sbs","qbdata","noc_helpdesk","appassure","support","scanner","ftp")
+$filterednames = @("vmware","dss","opendns","sp admin","dcg","qbdataservice","sql","st_bernard","hosted","ldapadmin","spadmin","test","noc","st. bernard","st bernard","managed care","bbadmin","besadmin","compliance","discovery","rmmscan","healthmailbox","sharepoint","windows sbs","qbdata","noc_helpdesk","appassure","support","scanner","ftp","app assure","aspnet","Dependable Computer Guys","efax","exchange","INSTALR","IUSR","IWAM","NAV","Quick Books")
 $perEnvFilteredNames = get-content $confFile | Select-Object -Index 4
 $perEnvFilteredNames = -split $perEnvFilteredNames
 $filterednames = $filterednames += $perEnvFilteredNames
