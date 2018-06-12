@@ -8,10 +8,18 @@ $companyName = Get-Content $confFile | Select-Object -Index 0
 $auditType = Get-Content $confFile | Select-Object -Index 1
 $companyContact = Get-Content $confFile | Select-Object -Index 2
 $companyContactEmail = Get-Content $confFile | Select-Object -Index 3
-$rdsGroup = Get-Content $confFile | Select-Object -Index 5
-Add-Content $logfile "The RDS Group to search is  $rdsGroup"
 
-$filterednames = @("vmware","dss","opendns","sp admin","dcg","qbdataservice","sql","st_bernard","hosted","ldapadmin","spadmin","test","noc","st. bernard","st bernard","managed care","bbadmin","besadmin","compliance","discovery","rmmscan","healthmailbox","sharepoint","windows sbs","qbdata","noc_helpdesk","appassure","support","scanner","ftp","app assure","aspnet","Dependable Computer Guys","efax","exchange","INSTALR","IUSR","IWAM","NAV","Quick Books")
+If ($auditType -match 2) {
+    $rdsGroup = Get-Content $confFile | Select-Object -Index 5
+    Add-Content $logfile "The RDS Group to search is  $rdsGroup"
+    }
+
+If ($auditType -match 7) {
+    $sslvpnGroup = Get-Content $confFile | Select-Object -Index 7
+    Add-Content $logfile "The SSLVPN group to search is $sslvpnGroup"
+    }
+
+$filterednames = @("LDAP","vmware","dss","opendns","sp admin","dcg","qbdataservice","sql","st_bernard","hosted","ldapadmin","spadmin","test","noc","st. bernard","st bernard","managed care","bbadmin","besadmin","compliance","discovery","rmmscan","healthmailbox","sharepoint","windows sbs","qbdata","noc_helpdesk","appassure","support","scanner","ftp","app assure","aspnet","Dependable Computer Guys","efax","exchange","INSTALR","IUSR","IWAM","NAV","Quick Books")
 $perEnvFilteredNames = get-content $confFile | Select-Object -Index 4
 $perEnvFilteredNames = -split $perEnvFilteredNames
 $filterednames = $filterednames += $perEnvFilteredNames
@@ -101,7 +109,21 @@ If ($auditType -match 6) {
     $BlaskguardUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)BlaskGuardUsers.txt"
     }
     
+If ($auditType -match 7) {
+    
+    Add-Content $logfile 'Beginning search of SSL VPN Users.'
+        
+    $sslvpnUsersRaw = (Get-ADGroupMember -Identity $sslvpnGroup | Get-ADUser | Where {($_.enabled -eq "True")}).name
 
+    $sslvpnUsersFiltered = $sslvpnUsersRaw | ? {$_ -notmatch $regex}
+    Add-Content $logfile 'Names of SSL VPN Users:'
+    $sslvpnUsersFiltered >> $logfile
+    Add-Content $logfile 'Count of SSL VPN Users:'
+    $sslvpnUsersFiltered.count >> $logfile
+    $sslvpnUsersFilteredCount = $sslvpnUsersFiltered.count
+    $sslvpnUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)SSLVPNUsers.txt"
+    $sslvpnUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)SSLVPNUsers.txt"
+    }
 
 $MailSubject = "$companyContact, Please review $companyName's DCG PrivateCLOUD SPLA counts before $Month 15th"
 $MailBody = "DCG strives to maintain an accurate active user list, as it pertains to your PrivateCLOUD server SPLA licensing counts on your server(s).  Attached is your current user count related Remote Desktop Services, MS Office, and SQL services on your PrivateCLOUD server.  This will be referenced in your upcoming Monthly Services invoice that will be emailed to you on the 15th of this month.
@@ -134,6 +156,13 @@ If ($auditType -match 6) {
     "
     $mailAttachments = $mailAttachments += $BlaskguardUsersAttachment
     }
+
+If ($auditType -match 7) {
+    $MailBody = $MailBody += "Current SSL VPN Users: $sslvpnUsersFilteredCount
+    
+    "
+    $mailAttachments = $mailAttachments += $sslvpnUsersAttachment
+}
 
 $MailBody = $MailBody += $extraMailBodyInfo
 
