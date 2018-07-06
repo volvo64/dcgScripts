@@ -19,6 +19,16 @@ If ($auditType -match 7) {
     Add-Content $logfile "The SSLVPN group to search is $sslvpnGroup"
     }
 
+If ($auditType -match 5) {
+    $officeGroup = Get-Content $confFile | Select-Object -Index 8
+    Add-Content $logfile "The Office group to search is $officeGroup"
+    }
+
+If ($auditType -match 6) {
+    $BlaskGuardGroup = Get-Content $confFile | Select-Object -Index 9
+    Add-Content $logfile "The BlaskGuard group to search is $BlaskGuardGroup"
+    }
+
 $filterednames = @("mimecast","guest","LDAP","vmware","dss","opendns","sp admin","dcg","qbdataservice","sql","st_bernard","hosted","ldapadmin","spadmin","test","noc","st. bernard","st bernard","managed care","bbadmin","besadmin","compliance","discovery","rmmscan","healthmailbox","sharepoint","windows sbs","qbdata","noc_helpdesk","appassure","support","scanner","ftp","app assure","aspnet","Dependable Computer Guys","efax","exchange","INSTALR","IUSR","IWAM","NAV","Quick Books")
 $perEnvFilteredNames = get-content $confFile | Select-Object -Index 4
 $perEnvFilteredNames = -split $perEnvFilteredNames
@@ -112,21 +122,75 @@ If ($auditType -match 3) {
     $exchangeUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)ExchangeUsers.txt"
     }
 
+If ($auditType -match 5) {
+    Add-Content $logfile "Beginning search of Office users."
+
+     If ((Get-WmiObject -Class Win32_ComputerSystem).PartOfDomain -eq "True") {
+        Add-Content $logfile "Server is part of a domain"
+        
+        $officeUsersRaw = (Get-ADGroupMember -Identity $officeGroup | Get-ADUser | Where {($_.enabled -eq "True")}).name
+
+        $officeUsersFiltered = $officeUsersRaw | ? {$_ -notmatch $regex}
+        Add-Content $logfile 'Names of Office Users:'
+        $officeUsersFiltered >> $logfile
+        Add-Content $logfile 'Count of Office Users:'
+        $officeUsersFiltered.count >> $logfile
+        $officeUsersFilteredCount = $officeUsersFiltered.count
+        $officeUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)OfficeUsers.txt"
+        $officeUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)OfficeUsers.txt"
+        }
+
+    Else {
+        Add-Content $logfile "Server is part of a workgroup"
+        Add-Content $logfile "Beginning search for Office Users."
+
+        $officeUsersRaw = (Get-LocalUser| Where {($_.enabled -eq "True")}).name
+        $officeUsersFiltered = $officeUsersRaw | ? {$_ -notmatch $regex}
+        Add-Content $logfile 'Names of Office Users:'
+        $officeUsersFiltered >> $logfile
+        Add-Content $logfile 'Count of Office Users:'
+        $officeUsersFiltered.count >> $logfile
+        $officeUsersFilteredCount = $officeUsersFiltered.count
+        $officeUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)OfficeUsers.txt"
+        $officeUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)OfficeUsers.txt"
+        }
+    }
+
+
 
 If ($auditType -match 6) {
 
     Add-Content $logfile 'Beginning search of Blaskguard Users.'
 
-    Add-Content $logfile "Performing full search of AD users to determine Blaskguard users."
-    $BlaskguardUsersRaw = (Get-AdUser -filter * |Where {($_.enabled -eq "True")}).name
-    $BlaskguardUsersFiltered = $BlaskguardUsersRaw | ? {$_ -notmatch $regex}
-    Add-Content $logfile 'Names of Blaskguard users: '
-    $BlaskguardUsersFiltered >> $logfile
-    Add-Content $logfile 'Count of Blaskguard users: '
-    $BlaskguardUsersFiltered.count >> $logfile
-    $BlaskguardUsersFilteredCount = $BlaskguardUsersFiltered.count
-    $BlaskguardUsersFiltered | Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)BlaskGuardUsers.txt"
-    $BlaskguardUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)BlaskGuardUsers.txt"
+     If ((Get-WmiObject -Class Win32_ComputerSystem).PartOfDomain -eq "True") {
+        Add-Content $logfile "Server is part of a domain"
+        
+        $BlaskGuardUsersRaw = (Get-ADGroupMember -Identity $BlaskGuardGroup | Get-ADUser | Where {($_.enabled -eq "True")}).name
+
+        $BlaskGuardUsersFiltered = $BlaskGuardUsersRaw | ? {$_ -notmatch $regex}
+        Add-Content $logfile 'Names of BlaskGuard Users:'
+        $BlaskGuardUsersFiltered >> $logfile
+        Add-Content $logfile 'Count of BlaskGuard Users:'
+        $BlaskGuardUsersFiltered.count >> $logfile
+        $BlaskGuardUsersFilteredCount = $BlaskGuardUsersFiltered.count
+        $BlaskGuardUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)BlaskGuardUsers.txt"
+        $BlaskGuardUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)BlaskGuardUsers.txt"
+        }
+
+    Else {
+        Add-Content $logfile "Server is part of a workgroup"
+        Add-Content $logfile "Beginning search for BlaskGuard Users."
+
+        $BlaskGuardUsersRaw = (Get-LocalUser| Where {($_.enabled -eq "True")}).name
+        $BlaskGuardUsersFiltered = $BlaskGuardUsersRaw | ? {$_ -notmatch $regex}
+        Add-Content $logfile 'Names of BlaskGuard Users:'
+        $BlaskGuardUsersFiltered >> $logfile
+        Add-Content $logfile 'Count of BlaskGuard Users:'
+        $BlaskGuardUsersFiltered.count >> $logfile
+        $BlaskGuardUsersFilteredCount = $BlaskGuardUsersFiltered.count
+        $BlaskGuardUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)BlaskGuardUsers.txt"
+        $BlaskGuardUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)BlaskGuardUsers.txt"
+        }
     }
     
 If ($auditType -match 7) {
@@ -170,6 +234,13 @@ $MailBody = $MailBody += "Current Exchange Users: $mailAccountsFilteredcount
 $mailAttachments = $mailAttachments += $exchangeUsersAttachment
 }
 
+If ($auditType -match 5) {
+    $MailBody = $MailBody += "Current Office Users: $officeUsersFilteredCount
+
+    "
+    $mailAttachments = $mailAttachments += $officeUsersAttachment
+    }
+
 If ($auditType -match 6) {
     $MailBody = $MailBody += "Current BlaskGuard Users: $BlaskguardUsersFilteredCount
 
@@ -194,6 +265,8 @@ Credits and refunds will not be issued after the 15th of this month.
 
 Thank you very much for taking the time to review these reports with us
 
-DCG Accounting"
+DCG Accounting
+
+This message was sent from $env:COMPUTERNAME"
 
 Send-MailMessage -From $MailFrom -To $MailTo -Subject $MailSubject -Body $MailBody -Port $SMTPPort -Credential $EmailCredential -Attachments $mailAttachments
