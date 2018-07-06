@@ -10,7 +10,9 @@ $companyContact = Get-Content $confFile | Select-Object -Index 2
 $companyContactEmail = Get-Content $confFile | Select-Object -Index 3
 
 If ($auditType -match 2) {
+    $rdsGroup = @()
     $rdsGroup = Get-Content $confFile | Select-Object -Index 5
+    $rdsGroup = $rdsGroup -split ","
     Add-Content $logfile "The RDS Group to search is  $rdsGroup"
     }
 
@@ -72,22 +74,29 @@ If ($auditType -match 1) {
     }
 
 If ($auditType -match 2) {
-
+    
     If ((Get-WmiObject -Class Win32_ComputerSystem).PartOfDomain -eq "True") {
         Add-Content $logfile "Server is part of a domain"
     
         Add-Content $logfile 'Beginning search of RDS Users.'
         
-        $rdsUsersRaw = (Get-ADGroupMember -Identity $rdsGroup | Get-ADUser | Where {($_.enabled -eq "True")}).name
+        $i = -1
+        foreach ($groupname in $rdsGroup) {
+        $i ++
+        $rdsGroupSelected = $rdsGroup[$i]
+    
+        
+        $rdsUsersRaw = (Get-ADGroupMember -Identity $rdsGroupSelected | Get-ADUser | Where {($_.enabled -eq "True")}).name
 
         $rdsUsersFiltered = $rdsUsersRaw | ? {$_ -notmatch $regex}
         Add-Content $logfile 'Names of RDS Users:'
         $rdsUsersFiltered >> $logfile
         Add-Content $logfile 'Count of RDS Users:'
-        $rdsUsersFiltered.count >> $logfile
-        $rdsUsersFilteredCount = $rdsUsersFiltered.count
-        $rdsUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
+        # $rdsUsersFiltered.count >> $logfile
+        # $rdsUsersFilteredCount = $rdsUsersFiltered.count
+        $rdsUsersFiltered |Sort-Object >> "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
         $rdsUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
+        }
         }
 
     Else {
@@ -104,7 +113,10 @@ If ($auditType -match 2) {
         $rdsUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
         $rdsUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
         }
+        $rdsUsersFilteredCount = 0 
+        get-content $rdsUsersAttachment | foreach-object {$rdsUsersFilteredCount++}
     }
+    
 
 
 If ($auditType -match 3) {
