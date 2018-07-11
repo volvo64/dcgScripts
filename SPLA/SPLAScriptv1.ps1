@@ -122,8 +122,8 @@ If ($auditType -match 2) {
 If ($auditType -match 3) {
     
     Add-Content $logfile 'Beginning search of Exchange mailboxes.'
-
-    $mailAccountsRaw = (Get-Mailbox -ResultSize Unlimited -WarningAction SilentlyContinue).DisplayName
+    
+    $mailAccountsRaw = ((Get-Mailbox -ResultSize Unlimited -WarningAction SilentlyContinue).emailaddresses | Where PrefixString -CEQ SMTP| select SmtpAddress)
     $mailAccountsFiltered = $mailAccountsRaw | ? {$_ -notmatch $regex}
     Add-Content $logfile 'Names of Exchange mailboxes:'
     $mailAccountsFiltered >> $logfile
