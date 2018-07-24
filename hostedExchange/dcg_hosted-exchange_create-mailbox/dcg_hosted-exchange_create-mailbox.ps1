@@ -1,5 +1,5 @@
 ﻿Start-Transcript
-Add-PSSnapin Microsoft.Exchange.Management.PowerShell.E2010
+
 
 $workingdir = Split-Path $MyInvocation.MyCommand.Path -Parent #Get current working directory
 $firstName = Read-Host "First Name"
@@ -63,25 +63,6 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK)
     $selectedCompany = $listBox.SelectedItem
 }
 
-Write-Host You are going to create a mailbox for $firstName $lastName at $selectedCompany.
-$yesNo = Read-Host "Are you sure you want to continue? (y/n)"
-Switch ($yesNo) {
-    Y {Write-host "Creating mailbox now"}
-    N {Write-Host "Cancelling"; Exit}
-    Default {Write-Host "Cancelling"; Exit}
-    }
-
-# Loop the next few lines until the passwords match
-#Do {
-# $pw1 = Read-Host "Input a secure password (The mailbox will not be created if the password is not secure)" -AsSecureString
-#$pw2 = Read-Host "Confirm the password" -AsSecureString
-#$pwd1_text = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($pw1))
-#$pwd2_text = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($pw2))
-#}
-#Until ($pwd1_text -ceq $pwd2_text)
-
-#Write-host The passwords match. Proceeding to create the mailbox now.
-
 $configFile = "$workingdir\conf\$selectedCompany.conf"
 $custAttr1 = Get-Content $configFile | Select-Object -Index 1
 $dn =  Get-Content $configFile | Select-Object -Index 2
@@ -90,10 +71,34 @@ $emailPrefix = Invoke-Expression -Command $emailPrefix
 $emailDomain = Get-Content $configFile | Select-Object -Index 3
 $emailDatabase = Get-Content $configFile | Select-Object -Index 5
 $emailABP = Get-Content $configFile | Select-Object -Index 6
-$emailAddress = "$emailPrefix@$emailDomain"
+$emailAddress = "$emailPrefix$emailDomain"
 Write-Host $emailPrefix
 Write-Host $custAttr1 $dn
 
+
+If ((Read-Host "Create a (1) mailbox or (2) distribution list") -eq 1) {
+Write-Host You are going to create a mailbox for $firstName $lastName at $selectedCompany.
+$yesNo = Read-Host "Are you sure you want to continue? (y/n)"
+Switch ($yesNo) {
+    Y {Write-host "Creating mailbox now"}
+    N {Write-Host "Cancelling"; Exit}
+    Default {Write-Host "Cancelling"; Exit}
+    }
+
 # Create the mailbox on this line
-$password = Read-Host "Enter password" -AsSecureString; New-Mailbox -UserPrincipalName $emailAddress -Alias $emailPrefix -Database $emailDatabase -Name $firstName$lastName -OrganizationalUnit $dn  -Password $password -FirstName $firstName -LastName $lastName -DisplayName "$firstName $lastName" -ResetPasswordOnNextLogon $false -AddressBookPolicy $emailABP
+$password = Read-Host "Enter password" -AsSecureString; New-Mailbox -UserPrincipalName $emailAddress -Alias $emailPrefix -Database $emailDatabase -Name "$firstName $lastName" -OrganizationalUnit $dn  -Password $password -FirstName $firstName -LastName $lastName -DisplayName "$firstName $lastName" -ResetPasswordOnNextLogon $false -AddressBookPolicy $emailABP
+sleep 5
 Set-Mailbox $emailaddress -CustomAttribute1 $custAttr1
+sleep 5
+# Send a test email
+
+$PSEmailServer = "host-exch90.dcgla.com"
+$EmailCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $emailaddress,$password
+$mailto = Read-Host "Enter your email address to send a test message"
+Send-MailMessage -From $emailaddress -To $mailto -Subject "Test Message" -Port 2525 -Credential $EmailCredential -SmtpServer host-exch90.dcgla.com
+    } 
+
+    ElseIf (-eq 2) {
+        Write-host "Creating a distribution list"
+        
+        New-DistributionGroup -Name "$selectedCompany - $emailAddress
