@@ -1,9 +1,9 @@
 ﻿Start-Transcript
-
+Add-PSSnapin Microsoft.Exchange.Management.PowerShell.E2010
 
 $workingdir = Split-Path $MyInvocation.MyCommand.Path -Parent #Get current working directory
-$firstName = Read-Host "First Name"
-$lastName = Read-Host "Last Name"
+$emailContact = Read-Host "What is the email address of the contact?"
+
 $companies = Get-Content "$workingdir\companies.txt"
 $companies = $companies | sort
 
@@ -64,41 +64,20 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK)
 }
 
 $configFile = "$workingdir\conf\$selectedCompany.conf"
+$companyName = Get-Content $configFile | Select-Object -Index 0
 $custAttr1 = Get-Content $configFile | Select-Object -Index 1
-$dn =  Get-Content $configFile | Select-Object -Index 2
-$emailPrefix = Get-Content $configFile | Select-Object -Index 4
-$emailPrefix = Invoke-Expression -Command $emailPrefix
-$emailDomain = Get-Content $configFile | Select-Object -Index 3
-$emailDatabase = Get-Content $configFile | Select-Object -Index 5
-$emailABP = Get-Content $configFile | Select-Object -Index 6
-$emailAddress = "$emailPrefix$emailDomain"
-Write-Host $emailPrefix
-Write-Host $custAttr1 $dn
+$contactsDN = Get-Content $configFile | Select-Object -Index 8
+Write-Host $custAttr1 $contactsDN
 
-
-If ((Read-Host "Create a (1) mailbox or (2) distribution list") -eq 1) {
-Write-Host You are going to create a mailbox for $firstName $lastName at $selectedCompany.
+Write-Host "You are going to create a contact for $emailContact at $companyName."
 $yesNo = Read-Host "Are you sure you want to continue? (y/n)"
 Switch ($yesNo) {
-    Y {Write-host "Creating mailbox now"}
+    Y {Write-host "Creating contact now"}
     N {Write-Host "Cancelling"; Exit}
     Default {Write-Host "Cancelling"; Exit}
     }
 
-# Create the mailbox on this line
-$password = Read-Host "Enter password" -AsSecureString; New-Mailbox -UserPrincipalName $emailAddress -Alias $emailPrefix -Database $emailDatabase -Name "$firstName $lastName" -OrganizationalUnit $dn  -Password $password -FirstName $firstName -LastName $lastName -DisplayName "$firstName $lastName" -ResetPasswordOnNextLogon $false -AddressBookPolicy $emailABP
-sleep 5
-Set-Mailbox $emailaddress -CustomAttribute1 $custAttr1
-sleep 5
-# Send a test email
+#Create the Mail Contact
 
-$PSEmailServer = "host-exch90.dcgla.com"
-$EmailCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $emailaddress,$password
-$mailto = Read-Host "Enter your email address to send a test message"
-Send-MailMessage -From $emailaddress -To $mailto -Subject "Test Message" -Port 2525 -Credential $EmailCredential -SmtpServer host-exch90.dcgla.com
-    } 
-
-    ElseIf (-eq 2) {
-        Write-host "Creating a distribution list"
-        
-        New-DistributionGroup -Name "$selectedCompany - $emailAddress
+New-MailContact -ExternalEmailAddress $emailContact -Name "$companyName - $emailContact" -OrganizationalUnit $contactsDN -Alias "$($companyName -replace '[ ]','')-$($emailContact -replace '[@]','')"
+Set-MailContact -Identity "$companyName - $emailContact" -CustomAttribute1 $custAttr1
