@@ -62,6 +62,7 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK)
 {
     $selectedCompany = $listBox.SelectedItem
 }
+else {break}
 
 $configFile = "$workingdir\conf\$selectedCompany.conf"
 $companyName = Get-Content $configFile | Select-Object -Index 0
@@ -79,5 +80,5 @@ Switch ($yesNo) {
 
 #Create the Mail Contact
 
-New-MailContact -ExternalEmailAddress $emailContact -Name "$companyName - $emailContact" -OrganizationalUnit $contactsDN -Alias "$($companyName -replace '[ ]','')-$($emailContact -replace '[@]','')"
-Set-MailContact -Identity "$companyName - $emailContact" -CustomAttribute1 $custAttr1
+New-MailContact -ExternalEmailAddress $emailContact -Name $("$companyName - $emailContact"[0..63] -join "") -OrganizationalUnit $contactsDN # -Alias "$(($companyName -replace '[ ]','')-$($emailContact -replace '[@]',''))[0..63] -join ''"
+Set-MailContact -Identity $("$companyName - $emailContact"[0..63] -join "") -CustomAttribute1 $custAttr1
