@@ -60,9 +60,9 @@ If ($auditType -match 1) {
     
     Add-Content $logfile 'Beginning search of AD users'
 
-    $usernamesraw = (Get-AdUser -filter * |Where {($_.enabled -eq "True")}).name
+    $usernamesraw = (Get-AdUser -filter * |Where-Object {($_.enabled -eq "True")}).name
 
-    $usernamesfiltered = $usernamesraw | ? {$_ -notmatch $regex}
+    $usernamesfiltered = $usernamesraw | Where-Object {$_ -notmatch $regex}
 
     Add-Content $logfile 'Names of AD users: '
     $usernamesfiltered >> $logfile
@@ -86,15 +86,15 @@ If ($auditType -match 2) {
         $rdsGroupSelected = $rdsGroup[$i]
     
         
-        $rdsUsersRaw = (Get-ADGroupMember -Identity $rdsGroupSelected | Get-ADUser | Where {($_.enabled -eq "True")}).name
+        $rdsUsersRaw = (Get-ADGroupMember -Identity $rdsGroupSelected | Get-ADUser | Where-Object {($_.enabled -eq "True")}).name
 
-        $rdsUsersFiltered = $rdsUsersRaw | ? {$_ -notmatch $regex}
+        $rdsUsersFiltered = $rdsUsersRaw | Where-Object {$_ -notmatch $regex}
         Add-Content $logfile 'Names of RDS Users:'
         $rdsUsersFiltered >> $logfile
         Add-Content $logfile 'Count of RDS Users:'
         # $rdsUsersFiltered.count >> $logfile
         # $rdsUsersFilteredCount = $rdsUsersFiltered.count
-        $rdsUsersFiltered |Sort-Object >> "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
+        $rdsUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
         $rdsUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
         }
         }
@@ -103,8 +103,8 @@ If ($auditType -match 2) {
         Add-Content $logfile "Server is part of a workgroup"
         Add-Content $logfile "Beginning search for RDS Users."
 
-        $rdsUsersRaw = (Get-LocalUser| Where {($_.enabled -eq "True")}).name
-        $rdsUsersFiltered = $rdsUsersRaw | ? {$_ -notmatch $regex}
+        $rdsUsersRaw = (Get-LocalUser| Where-Object {($_.enabled -eq "True")}).name
+        $rdsUsersFiltered = $rdsUsersRaw | Where-Object {$_ -notmatch $regex}
         Add-Content $logfile 'Names of RDS Users:'
         $rdsUsersFiltered >> $logfile
         Add-Content $logfile 'Count of RDS Users:'
@@ -123,8 +123,8 @@ If ($auditType -match 3) {
     
     Add-Content $logfile 'Beginning search of Exchange mailboxes.'
     
-    $mailAccountsRaw = ((Get-Mailbox -ResultSize Unlimited -WarningAction SilentlyContinue).emailaddresses | Where PrefixString -CEQ SMTP| select SmtpAddress)
-    $mailAccountsFiltered = $mailAccountsRaw | ? {$_ -notmatch $regex}
+    $mailAccountsRaw = ((Get-Mailbox -ResultSize Unlimited -WarningAction SilentlyContinue).emailaddresses | Where-Object PrefixString -CEQ SMTP| Select-Object SmtpAddress)
+    $mailAccountsFiltered = $mailAccountsRaw | Where-Object {$_ -notmatch $regex}
     Add-Content $logfile 'Names of Exchange mailboxes:'
     $mailAccountsFiltered >> $logfile
     Add-Content $logfile 'Count of Exchange mailboxes:'
@@ -140,9 +140,9 @@ If ($auditType -match 5) {
      If ((Get-WmiObject -Class Win32_ComputerSystem).PartOfDomain -eq "True") {
         Add-Content $logfile "Server is part of a domain"
         
-        $officeUsersRaw = (Get-ADGroupMember -Identity $officeGroup | Get-ADUser | Where {($_.enabled -eq "True")}).name
+        $officeUsersRaw = (Get-ADGroupMember -Identity $officeGroup | Get-ADUser | Where-Object {($_.enabled -eq "True")}).name
 
-        $officeUsersFiltered = $officeUsersRaw | ? {$_ -notmatch $regex}
+        $officeUsersFiltered = $officeUsersRaw | Where-Object {$_ -notmatch $regex}
         Add-Content $logfile 'Names of Office Users:'
         $officeUsersFiltered >> $logfile
         Add-Content $logfile 'Count of Office Users:'
@@ -156,8 +156,8 @@ If ($auditType -match 5) {
         Add-Content $logfile "Server is part of a workgroup"
         Add-Content $logfile "Beginning search for Office Users."
 
-        $officeUsersRaw = (Get-LocalUser| Where {($_.enabled -eq "True")}).name
-        $officeUsersFiltered = $officeUsersRaw | ? {$_ -notmatch $regex}
+        $officeUsersRaw = (Get-LocalUser| Where-Object {($_.enabled -eq "True")}).name
+        $officeUsersFiltered = $officeUsersRaw | Where-Object {$_ -notmatch $regex}
         Add-Content $logfile 'Names of Office Users:'
         $officeUsersFiltered >> $logfile
         Add-Content $logfile 'Count of Office Users:'
@@ -177,9 +177,9 @@ If ($auditType -match 6) {
      If ((Get-WmiObject -Class Win32_ComputerSystem).PartOfDomain -eq "True") {
         Add-Content $logfile "Server is part of a domain"
         
-        $BlaskGuardUsersRaw = (Get-ADGroupMember -Identity $BlaskGuardGroup | Get-ADUser | Where {($_.enabled -eq "True")}).name
+        $BlaskGuardUsersRaw = (Get-ADGroupMember -Identity $BlaskGuardGroup | Get-ADUser | Where-Object {($_.enabled -eq "True")}).name
 
-        $BlaskGuardUsersFiltered = $BlaskGuardUsersRaw | ? {$_ -notmatch $regex}
+        $BlaskGuardUsersFiltered = $BlaskGuardUsersRaw | Where-Object {$_ -notmatch $regex}
         Add-Content $logfile 'Names of BlaskGuard Users:'
         $BlaskGuardUsersFiltered >> $logfile
         Add-Content $logfile 'Count of BlaskGuard Users:'
@@ -193,8 +193,8 @@ If ($auditType -match 6) {
         Add-Content $logfile "Server is part of a workgroup"
         Add-Content $logfile "Beginning search for BlaskGuard Users."
 
-        $BlaskGuardUsersRaw = (Get-LocalUser| Where {($_.enabled -eq "True")}).name
-        $BlaskGuardUsersFiltered = $BlaskGuardUsersRaw | ? {$_ -notmatch $regex}
+        $BlaskGuardUsersRaw = (Get-LocalUser| Where-Object {($_.enabled -eq "True")}).name
+        $BlaskGuardUsersFiltered = $BlaskGuardUsersRaw | Where-Object {$_ -notmatch $regex}
         Add-Content $logfile 'Names of BlaskGuard Users:'
         $BlaskGuardUsersFiltered >> $logfile
         Add-Content $logfile 'Count of BlaskGuard Users:'
@@ -209,9 +209,9 @@ If ($auditType -match 7) {
     
     Add-Content $logfile 'Beginning search of SSL VPN Users.'
         
-    $sslvpnUsersRaw = (Get-ADGroupMember -Identity $sslvpnGroup | Get-ADUser | Where {($_.enabled -eq "True")}).name
+    $sslvpnUsersRaw = (Get-ADGroupMember -Identity $sslvpnGroup | Get-ADUser | Where-Object {($_.enabled -eq "True")}).name
 
-    $sslvpnUsersFiltered = $sslvpnUsersRaw | ? {$_ -notmatch $regex}
+    $sslvpnUsersFiltered = $sslvpnUsersRaw | Where-Object {$_ -notmatch $regex}
     Add-Content $logfile 'Names of SSL VPN Users:'
     $sslvpnUsersFiltered >> $logfile
     Add-Content $logfile 'Count of SSL VPN Users:'
