@@ -92,9 +92,8 @@ If ($auditType -match 2) {
         Add-Content $logfile 'Names of RDS Users:'
         $rdsUsersFiltered >> $logfile
         Add-Content $logfile 'Count of RDS Users:'
-        # $rdsUsersFiltered.count >> $logfile
-        # $rdsUsersFilteredCount = $rdsUsersFiltered.count
-        $rdsUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
+        # This count is additive because some clients have multiple RDS groups. The next line adds each iteration of a count to the file.
+        $rdsUsersFiltered |Sort-Object >> "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
         $rdsUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
         }
         }
@@ -110,7 +109,8 @@ If ($auditType -match 2) {
         Add-Content $logfile 'Count of RDS Users:'
         $rdsUsersFiltered.count >> $logfile
         $rdsUsersFilteredCount = $rdsUsersFiltered.count
-        $rdsUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
+        # This count is additive because some clients have multiple RDS groups. The next line adds each iteration of a count to the file.
+        $rdsUsersFiltered |Sort-Object >> "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
         $rdsUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
         }
         $rdsUsersFilteredCount = 0 
@@ -240,10 +240,20 @@ $mailAttachments = $mailAttachments += $rdsUsersAttachment
 }
 
 If ($auditType -match 3) {
-$MailBody = $MailBody += "Current Exchange Users: $mailAccountsFilteredcount
+    If ((Get-Content $confFile | Select-Object -Index 10) -match '^\d+$') {
+        $exchangePlusUsersCount = Get-Content $confFile | Select-Object -Index 10
+        $MailBody = $MailBody += "Current Exchange Users: $($mailAccountsFilteredCount - $exchangePlusUsersCount)
 
-"
-$mailAttachments = $mailAttachments += $exchangeUsersAttachment
+Current Exchange Plus Users: $exchangePlusUsersCount
+
+        "
+        }
+        Else {
+            $MailBody = $MailBody += "Current Exchange Users: $mailAccountsFilteredcount
+
+            "
+        }
+    $mailAttachments = $mailAttachments += $exchangeUsersAttachment
 }
 
 If ($auditType -match 5) {
