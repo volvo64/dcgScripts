@@ -242,11 +242,19 @@ $mailAttachments = $mailAttachments += $rdsUsersAttachment
 If ($auditType -match 3) {
     If ((Get-Content $confFile | Select-Object -Index 10) -match '^\d+$') {
         $exchangePlusUsersCount = Get-Content $confFile | Select-Object -Index 10
+        If ($mailAccountsFilteredCount -le $exchangePlusUsersCount) {
+            $MailBody = $MailBody += "Current Exchange Plus Users: $exchangePlusUsersCount
+
+        "
+        } 
+
+        else {
         $MailBody = $MailBody += "Current Exchange Users: $($mailAccountsFilteredCount - $exchangePlusUsersCount)
 
 Current Exchange Plus Users: $exchangePlusUsersCount
 
         "
+        }
         }
         Else {
             $MailBody = $MailBody += "Current Exchange Users: $mailAccountsFilteredcount
