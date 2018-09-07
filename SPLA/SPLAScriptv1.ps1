@@ -242,11 +242,16 @@ $mailAttachments = $mailAttachments += $rdsUsersAttachment
 If ($auditType -match 3) {
     If ((Get-Content $confFile | Select-Object -Index 10) -match '^\d+$') {
         $exchangePlusUsersCount = Get-Content $confFile | Select-Object -Index 10
+        #The next line compares the Exchange Plus count (specified on line 11 in the conf file) with the count of current mailboxes
+        #If the mailbox count is less than the Plus count then the mailbox count simply becomes the Plus count
+        #For example if all mailboxes at an org should be Plus licenses, then put a very high number on line 11 and it will always change the mailbox count to the Plus count
         If ($mailAccountsFilteredCount -le $exchangePlusUsersCount) {
-            $MailBody = $MailBody += "Current Exchange Plus Users: $exchangePlusUsersCount
+            $MailBody = $MailBody += "Current Exchange Plus Users: $mailAccountsFilteredCount
 
         "
         } 
+
+        #If the Plus count (specified on line 11 in the conf file) is less than the mailbox count then the Plus count gets subtracted from the mailbox count and both get reported separately.
 
         else {
         $MailBody = $MailBody += "Current Exchange Users: $($mailAccountsFilteredCount - $exchangePlusUsersCount)
