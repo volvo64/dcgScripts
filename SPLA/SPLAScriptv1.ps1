@@ -44,7 +44,7 @@ $SMTPUsername = "scriptsender@dcgla.net"
 $EncryptedPasswordFile = "$mydir\scriptsender@dcgla.net.securestring"
 $SecureStringPassword = Get-Content -Path $EncryptedPasswordFile | ConvertTo-SecureString
 $EmailCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $SMTPUsername,$SecureStringPassword
-$MailTo = "monitoring@dcgla.com"
+$MailBcc = "monitoring@dcgla.com"
 $MailFrom = "scriptsender@dcgla.net"
 $mailAttachments = @()
 $extraMailBodyInfo = Get-Content $confFile | Select-Object -Index 6
@@ -222,7 +222,9 @@ If ($auditType -match 7) {
     }
 
 $MailSubject = "$companyContact, Please review $companyName's DCG PrivateCLOUD SPLA counts before $Month 15th"
-$MailBody = "DCG strives to maintain an accurate active user list, as it pertains to your PrivateCLOUD server SPLA licensing counts on your server(s).  Attached is your current user count related Remote Desktop Services, MS Office, and SQL services on your PrivateCLOUD server.  This will be referenced in your upcoming Monthly Services invoice that will be emailed to you on the 15th of this month.
+$MailBody = "Hi $companyContact,
+
+DCG strives to maintain an accurate active user list, as it pertains to your PrivateCLOUD server SPLA licensing counts on your server(s).  Attached is your current user count related Remote Desktop Services, MS Office, and SQL services on your PrivateCLOUD server.  This will be referenced in your upcoming Monthly Services invoice that will be emailed to you on the 15th of this month.
 
 "
 If ($auditType -match 1) {
@@ -258,13 +260,13 @@ If ($auditType -match 3) {
 
 Current Exchange Plus Users: $exchangePlusUsersCount
 
-        "
+"
         }
         }
         Else {
             $MailBody = $MailBody += "Current Exchange Users: $mailAccountsFilteredcount
 
-            "
+"
         }
     $mailAttachments = $mailAttachments += $exchangeUsersAttachment
 }
@@ -272,7 +274,7 @@ Current Exchange Plus Users: $exchangePlusUsersCount
 If ($auditType -match 5) {
     $MailBody = $MailBody += "Current Office Users: $officeUsersFilteredCount
 
-    "
+"
     $mailAttachments = $mailAttachments += $officeUsersAttachment
     }
 
@@ -300,8 +302,14 @@ Credits and refunds will not be issued after the 15th of this month.
 
 Thank you very much for taking the time to review these reports with us
 
-DCG Accounting
+Jason Goode
+Operations Manager
+DCG Technical Solutions
+818-952-9195
+
+accounting@dcgla.com
 
 This message was sent from $env:COMPUTERNAME"
 
-Send-MailMessage -From $MailFrom -To $MailTo -Subject $MailSubject -Body $MailBody -Port $SMTPPort -Credential $EmailCredential -Attachments $mailAttachments
+Send-MailMessage -From $MailFrom -To $companyContactEmail -Bcc $MailBcc -Subject $MailSubject -Body $MailBody -Port $SMTPPort -Credential $EmailCredential -Attachments $mailAttachments -DeliveryNotificationOption OnFailure
+#The above line should return a failure notification to scriptsender@dcgla.net. If that happens there is a rule to forward that to the helpdesk for review.
