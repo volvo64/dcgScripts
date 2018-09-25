@@ -296,7 +296,7 @@ $MailBody = $MailBody += $extraMailBodyInfo
 
 $MailBody = $MailBody += "
 
-If any users should be removed from any of these lists, please contact DCG Technical Solutions before the 15th of the month.  We'll be sure to disable and remove any users so you will not incur any further licensing charges for them on your upcoming Monthly Services invoice.
+If any users should be removed from any of these lists, please email us at dispatch@dcgla.com before the 15th of the month.  We'll be sure to disable and remove any users so you will not incur any further licensing charges for them on your upcoming Monthly Services invoice.
 
 Credits and refunds will not be issued after the 15th of this month.
 
