@@ -1,7 +1,6 @@
 ﻿#For exporting or saving, this gets the directory from which the script is run.
 $MyDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Month = Get-Date -UFormat %B
-$time = Get-Date
 $logfile = "$myDir\logs\logfile.log"
 $confFile = "$myDir\company.conf"
 $companyName = Get-Content $confFile | Select-Object -Index 0
@@ -31,7 +30,7 @@ If ($auditType -match 6) {
     Add-Content $logfile "The BlaskGuard group to search is $BlaskGuardGroup"
     }
 
-$filterednames = @("dmarc@","mailmonitor","mimecast","guest","LDAP","vmware","dss","opendns","sp admin","dcg","qbdataservice","sql","st_bernard","hosted","ldapadmin","spadmin","test","noc","st. bernard","st bernard","managed care","bbadmin","besadmin","compliance","discovery","rmmscan","healthmailbox","sharepoint","windows sbs","qbdata","noc_helpdesk","appassure","scanner","ftp","app assure","aspnet","Dependable Computer Guys","efax","exchange","INSTALR","IUSR","IWAM","Quick Books")
+$filterednames = @("mailmonitor","mimecast","guest","LDAP","vmware","dss","opendns","sp admin","dcg","qbdataservice","sql","st_bernard","hosted","ldapadmin","spadmin","test","noc","st. bernard","st bernard","managed care","bbadmin","besadmin","compliance","discovery","rmmscan","healthmailbox","sharepoint","windows sbs","qbdata","noc_helpdesk","appassure","scanner","ftp","app assure","aspnet","Dependable Computer Guys","efax","exchange","INSTALR","IUSR","IWAM","Quick Books")
 $perEnvFilteredNames = get-content $confFile | Select-Object -Index 4
 $perEnvFilteredNames = -split $perEnvFilteredNames
 $filterednames = $filterednames += $perEnvFilteredNames
@@ -44,7 +43,7 @@ $SMTPUsername = "scriptsender@dcgla.net"
 $EncryptedPasswordFile = "$mydir\scriptsender@dcgla.net.securestring"
 $SecureStringPassword = Get-Content -Path $EncryptedPasswordFile | ConvertTo-SecureString
 $EmailCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $SMTPUsername,$SecureStringPassword
-$MailBcc = "monitoring@dcgla.com"
+$MailTo = "monitoring@dcgla.com"
 $MailFrom = "scriptsender@dcgla.net"
 $mailAttachments = @()
 $extraMailBodyInfo = Get-Content $confFile | Select-Object -Index 6
@@ -222,9 +221,7 @@ If ($auditType -match 7) {
     }
 
 $MailSubject = "$companyContact, Please review $companyName's DCG PrivateCLOUD SPLA counts before $Month 15th"
-$MailBody = "Hi $companyContact,
-
-DCG strives to maintain an accurate active user list, as it pertains to your PrivateCLOUD server SPLA licensing counts on your server(s).  Attached is your current user count related Remote Desktop Services, MS Office, and SQL services on your PrivateCLOUD server.  This will be referenced in your upcoming Monthly Services invoice that will be emailed to you on the 15th of this month.
+$MailBody = "DCG strives to maintain an accurate active user list, as it pertains to your PrivateCLOUD server SPLA licensing counts on your server(s).  Attached is your current user count related Remote Desktop Services, MS Office, and SQL services on your PrivateCLOUD server.  This will be referenced in your upcoming Monthly Services invoice that will be emailed to you on the 15th of this month.
 
 "
 If ($auditType -match 1) {
@@ -244,29 +241,16 @@ $mailAttachments = $mailAttachments += $rdsUsersAttachment
 If ($auditType -match 3) {
     If ((Get-Content $confFile | Select-Object -Index 10) -match '^\d+$') {
         $exchangePlusUsersCount = Get-Content $confFile | Select-Object -Index 10
-        #The next line compares the Exchange Plus count (specified on line 11 in the conf file) with the count of current mailboxes
-        #If the mailbox count is less than the Plus count then the mailbox count simply becomes the Plus count
-        #For example if all mailboxes at an org should be Plus licenses, then put a very high number on line 11 and it will always change the mailbox count to the Plus count
-        If ($mailAccountsFilteredCount -le $exchangePlusUsersCount) {
-            $MailBody = $MailBody += "Current Exchange Plus Users: $mailAccountsFilteredCount
-
-        "
-        } 
-
-        #If the Plus count (specified on line 11 in the conf file) is less than the mailbox count then the Plus count gets subtracted from the mailbox count and both get reported separately.
-
-        else {
         $MailBody = $MailBody += "Current Exchange Users: $($mailAccountsFilteredCount - $exchangePlusUsersCount)
 
 Current Exchange Plus Users: $exchangePlusUsersCount
 
-"
-        }
+        "
         }
         Else {
             $MailBody = $MailBody += "Current Exchange Users: $mailAccountsFilteredcount
 
-"
+            "
         }
     $mailAttachments = $mailAttachments += $exchangeUsersAttachment
 }
@@ -274,7 +258,7 @@ Current Exchange Plus Users: $exchangePlusUsersCount
 If ($auditType -match 5) {
     $MailBody = $MailBody += "Current Office Users: $officeUsersFilteredCount
 
-"
+    "
     $mailAttachments = $mailAttachments += $officeUsersAttachment
     }
 
@@ -296,20 +280,14 @@ $MailBody = $MailBody += $extraMailBodyInfo
 
 $MailBody = $MailBody += "
 
-If any users should be removed from any of these lists, please email us at dispatch@dcgla.com before the 15th of the month.  We'll be sure to disable and remove any users so you will not incur any further licensing charges for them on your upcoming Monthly Services invoice.
+If any users should be removed from any of these lists, please contact DCG Technical Solutions before the 15th of the month.  We'll be sure to disable and remove any users so you will not incur any further licensing charges for them on your upcoming Monthly Services invoice.
 
 Credits and refunds will not be issued after the 15th of this month.
 
 Thank you very much for taking the time to review these reports with us
 
-Jason Goode
-Operations Manager
-DCG Technical Solutions
-818-952-9195
-
-accounting@dcgla.com
+DCG Accounting
 
 This message was sent from $env:COMPUTERNAME"
 
-Send-MailMessage -From $MailFrom -To $companyContactEmail -Bcc $MailBcc -Subject $MailSubject -Body $MailBody -Port $SMTPPort -Credential $EmailCredential -Attachments $mailAttachments -DeliveryNotificationOption OnFailure
-#The above line should return a failure notification to scriptsender@dcgla.net. If that happens there is a rule to forward that to the helpdesk for review.
+Send-MailMessage -From $MailFrom -To $MailTo -Subject $MailSubject -Body $MailBody -Port $SMTPPort -Credential $EmailCredential -Attachments $mailAttachments

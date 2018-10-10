@@ -1,14 +1,18 @@
-﻿Start-Transcript
-Add-PSSnapin Microsoft.Exchange.Management.PowerShell.E2010
-. $env:ExchangeInstallPath\bin\RemoteExchange.ps1
-Connect-ExchangeServer -auto
+﻿function New-ListBox {
 
-$workingdir = Split-Path $MyInvocation.MyCommand.Path -Parent #Get current working directory
-$emailPrefix = Read-Host "What is the first part of the email address (without the @)?"
-$distGroupOwner = Read-Host "What is the email address of the group owner (requester)?"
-$friendlyName = Read-Host "What is the friendly name of the group?"
-$companies = Get-Content "$workingdir\companies.txt"
-$companies = $companies | sort
+    Param(
+    [parameter(Mandatory=$true)]
+    [String]
+    $ListText
+
+    [parameter(Mandatory=$false)]
+    [String]
+    $TitleText
+
+    [parameter(Mandatory=$false)]
+    [String]
+    $LabelText
+    )
 
 # https://docs.microsoft.com/en-us/powershell/scripting/getting-started/cookbooks/selecting-items-from-a-list-box?view=powershell-6
 
@@ -65,21 +69,3 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK)
 {
     $selectedCompany = $listBox.SelectedItem
 }
-
-else {break}
-
-$configFile = "$workingdir\conf\$selectedCompany.conf"
-$companyName = Get-Content $configFile | Select-Object -Index 0
-$custAttr1 = Get-Content $configFile | Select-Object -Index 1
-$ouOfGroups = Get-Content $configFile | Select-Object -Index 9
-
-$emailDomain = Get-Content $configFile | Select-Object -Index 3
-
-$emailABP = Get-Content $configFile | Select-Object -Index 6
-
-$emailAddress = "$emailPrefix$emailDomain"
-
-
-New-DistributionGroup -DisplayName "$companyName - $friendlyName"-Name "$companyName - $friendlyName" -Alias $emailPrefix -OrganizationalUnit $ouOfGroups -ModeratedBy $distGroupOwner -Members $distGroupOwner
-
-Set-DistributionGroup -Identity "$companyName - $friendlyName"  -RequireSenderAuthenticationEnabled $False -CustomAttribute1 $custAttr1

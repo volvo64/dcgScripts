@@ -1,21 +1,28 @@
-﻿Start-Transcript
+﻿[CmdletBinding()]
+Param(
+    [Parameter(Mandatory = $True, Position = 1)]
+    [string]$csvFile
+
+    
+)
+
+
+Start-Transcript
 Add-PSSnapin Microsoft.Exchange.Management.PowerShell.E2010
 . $env:ExchangeInstallPath\bin\RemoteExchange.ps1
 Connect-ExchangeServer -auto
 
-$csv = Read-Host "Type path (or drop file) to CSV here"
+#This is a work in progress. I changed a bunch of stuff here and have _not_ tested it.
+
+$csv = Import-Csv $csvFile
 $company = Read-Host "What is the company name (short)?"
 
-$csv  |
 
-ForEach-Object {
-    New-DistributionGroup -Name "$company - $($_.DistributionGroup)" -Alias $_.Alias -Type Distribution -Members $_.ForwardingAddress1 -OrganizationalUnit $_.OrganizationalUnit
-    If ($_.ForwardingAddress2 -ne "") {
-        Start-Sleep 5
-        Add-DistributionGroupMember -Identity "$company - $($_.DistributionGroup)" -Member $_.ForwardingAddress2
+ForEach ($c in $csv) {
+    New-DistributionGroup -Name "$company - $($c.DistributionGroup)" -Alias $c.Alias -Type Distribution -Members $c.ForwardingAddress1 -OrganizationalUnit $c.OrganizationalUnit
+    If ($c.ForwardingAddress2 -ne "") {
+        Sleep 5
+        Add-DistributionGroupMember -Identity "$company - $($c.DistributionGroup)" -Member $c.ForwardingAddress2
+        Set-DistributionGroup -Identity "$company - $($c.DistributionGroup)" -CustomAttribute1 $c.CustomAttribute -RequireSenderAuthenticationEnabled $False
     }
 }
-
-Start-Sleep 20
-
-$csv  | ForEach-Object {Set-DistributionGroup -Identity "$company - $($_.DistributionGroup)" -CustomAttribute1 $_.CustomAttribute -RequireSenderAuthenticationEnabled $False}

@@ -1,16 +1,27 @@
-﻿Start-Transcript
+﻿[CmdletBinding()]
+
+Param(
+    [Parameter(Mandatory = $true, Position = 1)]
+    [string]$emailToExport,
+
+    [Parameter(Mandatory = $true, Position = 2)]
+    [string]$serviceTicketNumber
+)
+
+Start-Transcript
 Add-PSSnapin Microsoft.Exchange.Management.PowerShell.E2010
 . $env:ExchangeInstallPath\bin\RemoteExchange.ps1
 Connect-ExchangeServer -auto
 
 $workingdir = Split-Path $MyInvocation.MyCommand.Path -Parent #Get current working directory
-$hostedExchchangeConfFile = "$workingdir\HostedExchange.conf"
+$confFilename = ""
+$hostedExchchangeConfFile = "$workingdir\$confFileName"
 
-$emailToExport = Read-Host "What is the email address to export?"
-$serviceTicketNumber = Read-Host "What is the service ticket number?"
+# $emailToExport = Read-Host "What is the email address to export?"
+$serviceTicketNumber = $serviceTicketNumber -replace '\s', ''
 $exportDirectory = Get-Content $hostedExchchangeConfFile | Select-Object -Index 0
 Write-Host "The mailbox will be exported to $exportDirectory
 
 Please delete when finished."
 
-New-MailboxExportRequest -Mailbox $emailToExport -AcceptLargeDataLoss -BadItemLimit 1000 -FilePath "$exportDirectory\$serviceTicketNumber $emailToExport.pst"
+New-MailboxExportRequest -Mailbox $emailToExport -AcceptLargeDataLoss -BadItemLimit 1000 -FilePath "$exportDirectory\$serviceTicketNumber_$emailToExport.pst"
