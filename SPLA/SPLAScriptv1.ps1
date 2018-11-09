@@ -13,24 +13,24 @@ If ($auditType -match 2) {
     $rdsGroup = Get-Content $confFile | Select-Object -Index 5
     $rdsGroup = $rdsGroup -split ","
     Add-Content $logfile "The RDS Group to search is  $rdsGroup"
-    }
+}
 
 If ($auditType -match 7) {
     $sslvpnGroup = Get-Content $confFile | Select-Object -Index 7
     Add-Content $logfile "The SSLVPN group to search is $sslvpnGroup"
-    }
+}
 
 If ($auditType -match 5) {
     $officeGroup = Get-Content $confFile | Select-Object -Index 8
     Add-Content $logfile "The Office group to search is $officeGroup"
-    }
+}
 
 If ($auditType -match 6) {
     $BlaskGuardGroup = Get-Content $confFile | Select-Object -Index 9
     Add-Content $logfile "The BlaskGuard group to search is $BlaskGuardGroup"
-    }
+}
 
-$filterednames = @("mailmonitor","mimecast","guest","LDAP","vmware","dss","opendns","sp admin","dcg","qbdataservice","sql","st_bernard","hosted","ldapadmin","spadmin","test","noc","st. bernard","st bernard","managed care","bbadmin","besadmin","compliance","discovery","rmmscan","healthmailbox","sharepoint","windows sbs","qbdata","noc_helpdesk","appassure","scanner","ftp","app assure","aspnet","Dependable Computer Guys","efax","exchange","INSTALR","IUSR","IWAM","Quick Books")
+$filterednames = @("mailmonitor", "mimecast", "guest", "LDAP", "vmware", "dss", "opendns", "sp admin", "dcg", "qbdataservice", "sql", "st_bernard", "hosted", "ldapadmin", "spadmin", "test", "noc", "st. bernard", "st bernard", "managed care", "bbadmin", "besadmin", "compliance", "discovery", "rmmscan", "healthmailbox", "sharepoint", "windows sbs", "qbdata", "noc_helpdesk", "appassure", "scanner", "ftp", "app assure", "aspnet", "Dependable Computer Guys", "efax", "exchange", "INSTALR", "IUSR", "IWAM", "Quick Books")
 $perEnvFilteredNames = get-content $confFile | Select-Object -Index 4
 $perEnvFilteredNames = -split $perEnvFilteredNames
 $filterednames = $filterednames += $perEnvFilteredNames
@@ -42,7 +42,7 @@ $SMTPPort = 2525
 $SMTPUsername = "scriptsender@dcgla.net"
 $EncryptedPasswordFile = "$mydir\scriptsender@dcgla.net.securestring"
 $SecureStringPassword = Get-Content -Path $EncryptedPasswordFile | ConvertTo-SecureString
-$EmailCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $SMTPUsername,$SecureStringPassword
+$EmailCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $SMTPUsername, $SecureStringPassword
 $MailTo = "monitoring@dcgla.com"
 $MailFrom = "scriptsender@dcgla.net"
 $mailAttachments = @()
@@ -51,7 +51,7 @@ If ($auditType -match 3) {
     
     Add-PSSnapin Microsoft.Exchange.Management.PowerShell.E2010
 
-    }
+}
 
 Get-Date >> $logfile
 
@@ -70,7 +70,7 @@ If ($auditType -match 1) {
     $usernamesfilteredCount = $usernamesfiltered.count
     $usernamesfiltered | Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)ADUsers.txt"
     $adUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)ADUsers.txt"
-    }
+}
 
 If ($auditType -match 2) {
     
@@ -81,21 +81,21 @@ If ($auditType -match 2) {
         
         $i = -1
         foreach ($groupname in $rdsGroup) {
-        $i ++
-        $rdsGroupSelected = $rdsGroup[$i]
+            $i ++
+            $rdsGroupSelected = $rdsGroup[$i]
     
         
-        $rdsUsersRaw = (Get-ADGroupMember -Identity $rdsGroupSelected | Get-ADUser | Where-Object {($_.enabled -eq "True")}).name
+            $rdsUsersRaw = (Get-ADGroupMember -Identity $rdsGroupSelected | Get-ADUser | Where-Object {($_.enabled -eq "True")}).name
 
-        $rdsUsersFiltered = $rdsUsersRaw | Where-Object {$_ -notmatch $regex}
-        Add-Content $logfile 'Names of RDS Users:'
-        $rdsUsersFiltered >> $logfile
-        Add-Content $logfile 'Count of RDS Users:'
-        # This count is additive because some clients have multiple RDS groups. The next line adds each iteration of a count to the file.
-        $rdsUsersFiltered |Sort-Object >> "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
-        $rdsUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
+            $rdsUsersFiltered = $rdsUsersRaw | Where-Object {$_ -notmatch $regex}
+            Add-Content $logfile 'Names of RDS Users:'
+            $rdsUsersFiltered >> $logfile
+            Add-Content $logfile 'Count of RDS Users:'
+            # This count is additive because some clients have multiple RDS groups. The next line adds each iteration of a count to the file.
+            $rdsUsersFiltered |Sort-Object >> "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
+            $rdsUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
         }
-        }
+    }
 
     Else {
         Add-Content $logfile "Server is part of a workgroup"
@@ -111,10 +111,10 @@ If ($auditType -match 2) {
         # This count is additive because some clients have multiple RDS groups. The next line adds each iteration of a count to the file.
         $rdsUsersFiltered |Sort-Object >> "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
         $rdsUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
-        }
-        $rdsUsersFilteredCount = 0 
-        get-content $rdsUsersAttachment | foreach-object {$rdsUsersFilteredCount++}
     }
+    $rdsUsersFilteredCount = 0 
+    get-content $rdsUsersAttachment | foreach-object {$rdsUsersFilteredCount++}
+}
     
 
 
@@ -131,12 +131,12 @@ If ($auditType -match 3) {
     $mailAccountsFilteredCount = $mailAccountsFiltered.Count
     $mailAccountsFiltered | Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)ExchangeUsers.txt"
     $exchangeUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)ExchangeUsers.txt"
-    }
+}
 
 If ($auditType -match 5) {
     Add-Content $logfile "Beginning search of Office users."
 
-     If ((Get-WmiObject -Class Win32_ComputerSystem).PartOfDomain -eq "True") {
+    If ((Get-WmiObject -Class Win32_ComputerSystem).PartOfDomain -eq "True") {
         Add-Content $logfile "Server is part of a domain"
         
         $officeUsersRaw = (Get-ADGroupMember -Identity $officeGroup | Get-ADUser | Where-Object {($_.enabled -eq "True")}).name
@@ -149,7 +149,7 @@ If ($auditType -match 5) {
         $officeUsersFilteredCount = $officeUsersFiltered.count
         $officeUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)OfficeUsers.txt"
         $officeUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)OfficeUsers.txt"
-        }
+    }
 
     Else {
         Add-Content $logfile "Server is part of a workgroup"
@@ -164,8 +164,8 @@ If ($auditType -match 5) {
         $officeUsersFilteredCount = $officeUsersFiltered.count
         $officeUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)OfficeUsers.txt"
         $officeUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)OfficeUsers.txt"
-        }
     }
+}
 
 
 
@@ -173,7 +173,7 @@ If ($auditType -match 6) {
 
     Add-Content $logfile 'Beginning search of Blaskguard Users.'
 
-     If ((Get-WmiObject -Class Win32_ComputerSystem).PartOfDomain -eq "True") {
+    If ((Get-WmiObject -Class Win32_ComputerSystem).PartOfDomain -eq "True") {
         Add-Content $logfile "Server is part of a domain"
         
         $BlaskGuardUsersRaw = (Get-ADGroupMember -Identity $BlaskGuardGroup | Get-ADUser | Where-Object {($_.enabled -eq "True")}).name
@@ -186,7 +186,7 @@ If ($auditType -match 6) {
         $BlaskGuardUsersFilteredCount = $BlaskGuardUsersFiltered.count
         $BlaskGuardUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)BlaskGuardUsers.txt"
         $BlaskGuardUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)BlaskGuardUsers.txt"
-        }
+    }
 
     Else {
         Add-Content $logfile "Server is part of a workgroup"
@@ -201,8 +201,8 @@ If ($auditType -match 6) {
         $BlaskGuardUsersFilteredCount = $BlaskGuardUsersFiltered.count
         $BlaskGuardUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)BlaskGuardUsers.txt"
         $BlaskGuardUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)BlaskGuardUsers.txt"
-        }
     }
+}
     
 If ($auditType -match 7) {
     
@@ -218,40 +218,47 @@ If ($auditType -match 7) {
     $sslvpnUsersFilteredCount = $sslvpnUsersFiltered.count
     $sslvpnUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)SSLVPNUsers.txt"
     $sslvpnUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)SSLVPNUsers.txt"
-    }
+}
 
 $MailSubject = "$companyContact, Please review $companyName's DCG PrivateCLOUD SPLA counts before $Month 15th"
 $MailBody = "DCG strives to maintain an accurate active user list, as it pertains to your PrivateCLOUD server SPLA licensing counts on your server(s).  Attached is your current user count related Remote Desktop Services, MS Office, and SQL services on your PrivateCLOUD server.  This will be referenced in your upcoming Monthly Services invoice that will be emailed to you on the 15th of this month.
 
 "
 If ($auditType -match 1) {
-$mailBody = $mailBody += "Current Active Directory Users: $usernamesfilteredcount
+    $mailBody = $mailBody += "Current Active Directory Users: $usernamesfilteredcount
 
 "
-$mailAttachments = $mailAttachments += $adUsersAttachment
+    $mailAttachments = $mailAttachments += $adUsersAttachment
 }
 
 If ($auditType -match 2) {
-$MailBody = $MailBody += "Current Remote Desktop Users: $rdsUsersFilteredcount
+    $MailBody = $MailBody += "Current Remote Desktop Users: $rdsUsersFilteredcount
 
 "
-$mailAttachments = $mailAttachments += $rdsUsersAttachment
+    $mailAttachments = $mailAttachments += $rdsUsersAttachment
 }
 
 If ($auditType -match 3) {
     If ((Get-Content $confFile | Select-Object -Index 10) -match '^\d+$') {
         $exchangePlusUsersCount = Get-Content $confFile | Select-Object -Index 10
-        $MailBody = $MailBody += "Current Exchange Users: $($mailAccountsFilteredCount - $exchangePlusUsersCount)
+        If ($exchangePlusUsersCount -ge $mailAccountsFilteredCount) {
+            $MailBody = $MailBody += "Current Exchange Plus Users: $mailAccountsFilteredCount
+
+"       
+        }
+        Else {
+            $MailBody = $MailBody += "Current Exchange Users: $($mailAccountsFilteredCount - $exchangePlusUsersCount)
 
 Current Exchange Plus Users: $exchangePlusUsersCount
 
-        "
+"
         }
-        Else {
-            $MailBody = $MailBody += "Current Exchange Users: $mailAccountsFilteredcount
+    }
+    Else {
+        $MailBody = $MailBody += "Current Exchange Users: $mailAccountsFilteredcount
 
             "
-        }
+    }
     $mailAttachments = $mailAttachments += $exchangeUsersAttachment
 }
 
@@ -260,14 +267,14 @@ If ($auditType -match 5) {
 
     "
     $mailAttachments = $mailAttachments += $officeUsersAttachment
-    }
+}
 
 If ($auditType -match 6) {
     $MailBody = $MailBody += "Current BlaskGuard Users: $BlaskguardUsersFilteredCount
 
     "
     $mailAttachments = $mailAttachments += $BlaskguardUsersAttachment
-    }
+}
 
 If ($auditType -match 7) {
     $MailBody = $MailBody += "Current SSL VPN Users: $sslvpnUsersFilteredCount
@@ -279,7 +286,6 @@ If ($auditType -match 7) {
 $MailBody = $MailBody += $extraMailBodyInfo
 
 $MailBody = $MailBody += "
-
 If any users should be removed from any of these lists, please contact DCG Technical Solutions before the 15th of the month.  We'll be sure to disable and remove any users so you will not incur any further licensing charges for them on your upcoming Monthly Services invoice.
 
 Credits and refunds will not be issued after the 15th of this month.
