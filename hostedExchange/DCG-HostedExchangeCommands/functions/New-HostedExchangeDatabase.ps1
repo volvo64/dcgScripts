@@ -12,7 +12,7 @@ Connect-ExchangeServer -auto
 
 $databaseName = "$client`_2016"
 $drive = "F:"
-$server = ""
+$server = #server name here
 
 New-MailboxDatabase -Server $server -Name $databaseName -EdbFilePath "$drive\ExchDB\$databaseName\$databaseName.edb" -LogFolderPath "$drive\ExchDB\$databaseName" -WarningAction SilentlyContinue
 Sleep 60

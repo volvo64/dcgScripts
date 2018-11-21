@@ -14,8 +14,7 @@ Add-PSSnapin Microsoft.Exchange.Management.PowerShell.E2010
 Connect-ExchangeServer -auto
 
 $workingdir = Split-Path $MyInvocation.MyCommand.Path -Parent #Get current working directory
-$confFilename = ""
-$hostedExchchangeConfFile = "$workingdir\$confFileName"
+$hostedExchchangeConfFile = "$workingdir\HostedExchange.conf"
 
 # $emailToExport = Read-Host "What is the email address to export?"
 $serviceTicketNumber = $serviceTicketNumber -replace '\s', ''

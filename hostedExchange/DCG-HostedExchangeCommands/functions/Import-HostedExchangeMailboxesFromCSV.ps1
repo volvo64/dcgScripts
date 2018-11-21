@@ -1,7 +1,5 @@
 ﻿Add-PSSnapin Microsoft.Exchange.Management.PowerShell.E2010
 
-
-$adminMailbox = 
 $csv = Read-Host "Type path (or drop file) to CSV here"
 $Password = Read-Host "Enter password" -AsSecureString 
 Import-csv $csv | 
@@ -17,5 +15,6 @@ Import-csv $csv |
     If ($_.smtpaddress1 -ne "") {
         Set-Mailbox -Identity $_.UserPrincipalName -EmailAddresses @{add = ${$._smtpaddress1}}
     }
-    Add-MailboxPermission $_.UserPrincipalName -User $adminMailbox -AccessRight FullAccess -InheritanceType All -Automapping $false
 }
+
+Import-csv $csv |Foreach {Add-MailboxPermission $_.UserPrincipalName -User "Administrator@domain.local" -AccessRight FullAccess -InheritanceType All -Automapping $false}
