@@ -240,7 +240,7 @@ If ($auditType -match 2) {
 
 If ($auditType -match 3) {
     If ((Get-Content $confFile | Select-Object -Index 10) -match '^\d+$') {
-        $exchangePlusUsersCount = Get-Content $confFile | Select-Object -Index 10
+        [Int]$exchangePlusUsersCount = Get-Content $confFile | Select-Object -Index 10
         If ($exchangePlusUsersCount -ge $mailAccountsFilteredCount) {
             $MailBody = $MailBody += "Current Exchange Plus Users: $mailAccountsFilteredCount
 
