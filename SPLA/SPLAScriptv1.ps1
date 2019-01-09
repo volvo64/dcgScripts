@@ -79,13 +79,9 @@ If ($auditType -match 2) {
     
         Add-Content $logfile 'Beginning search of RDS Users.'
         
-        $i = -1
         foreach ($groupname in $rdsGroup) {
-            $i ++
-            $rdsGroupSelected = $rdsGroup[$i]
-    
-        
-            $rdsUsersRaw = (Get-ADGroupMember -Identity $rdsGroupSelected | Get-ADUser | Where-Object {($_.enabled -eq "True")}).name
+                    
+            $rdsUsersRaw = (Get-ADGroupMember -Identity $groupname -Recursive | Get-ADUser | Where-Object {($_.enabled -eq "True")}).name
 
             $rdsUsersFiltered = $rdsUsersRaw | Where-Object {$_ -notmatch $regex}
             Add-Content $logfile 'Names of RDS Users:'
@@ -95,6 +91,8 @@ If ($auditType -match 2) {
             $rdsUsersFiltered |Sort-Object >> "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
             $rdsUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
         }
+        $rdsUsersFiltered = Get-Content $rdsUsersAttachment | Sort-Object -Unique
+        $rdsUsersFiltered > $rdsUsersAttachment
     }
 
     Else {
