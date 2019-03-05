@@ -2,7 +2,7 @@
 
 $company = Read-Host "What is the company name (short)?"
 
-Import-csv #csv file here |
+Import-csv '.csv' |
 
 ForEach {
     New-DistributionGroup -Name "$company - $($_.DistributionGroup)" -Alias $_.Alias -Type Distribution -Members $_.ForwardingAddress1 -OrganizationalUnit $_.OrganizationalUnit
@@ -14,4 +14,4 @@ ForEach {
 
 Sleep 20
 
-Import-csv #csv file here | ForEach {Set-DistributionGroup -Identity "$company - $($_.DistributionGroup)" -CustomAttribute1 $_.CustomAttribute -RequireSenderAuthenticationEnabled $False}
+Import-csv '.csv' | ForEach {Set-DistributionGroup -Identity "$company - $($_.DistributionGroup)" -CustomAttribute1 $_.CustomAttribute -RequireSenderAuthenticationEnabled $False}

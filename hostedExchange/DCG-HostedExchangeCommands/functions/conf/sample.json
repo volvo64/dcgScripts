@@ -1,0 +1,14 @@
+{
+    "company": {
+        "name": "$name",
+        "CustomAttribute1":"$custAttr1",
+        "usersOU": "$dn",
+        "emailDomain": "$emailDomain",
+        "emailPrefix": "$emailPrefix",
+        "database": "$emailDatabase",
+        "abp": "$emailABP",
+        "pfMailbox": "$publicFolderMailbox",
+        "contactsOU": "$contactsOU",
+        "groupsOU": "$groupsOU"
+    }
+}

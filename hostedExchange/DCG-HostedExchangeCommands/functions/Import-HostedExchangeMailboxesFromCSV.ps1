@@ -1,20 +1,24 @@
-﻿Add-PSSnapin Microsoft.Exchange.Management.PowerShell.E2010
+﻿[CmdletBinding()]
 
-$csv = Read-Host "Type path (or drop file) to CSV here"
-$Password = Read-Host "Enter password" -AsSecureString 
-Import-csv $csv | 
-    ForEach {
-    New-Mailbox -FirstName $_.FirstName -LastName $_.LastName -Alias $_.alias -Name $_.name -userPrincipalName $_.UserPrincipalName -SamAccountName $_.SamAccountName -Database $_.Database -OrganizationalUnit $_.OrganizationalUnit -Password $Password -AddressBookPolicy $_.AddressBookPolicy -ResetPasswordOnNextLogon $true
-}
+Param(
+    [Parameter(Mandatory=$True)]
+    [string]$csv,
 
-Sleep 10
+    [Parameter(Mandatory=$True)]
+    [string]$strpassword
+    )
 
-Import-csv $csv |
-    Foreach {
-    Set-Mailbox -Identity $_.UserPrincipalName -CustomAttribute1 $_.CustomAttribute1
-    If ($_.smtpaddress1 -ne "") {
-        Set-Mailbox -Identity $_.UserPrincipalName -EmailAddresses @{add = ${$._smtpaddress1}}
-    }
-}
+Start-Transcript
+. $env:ExchangeInstallPath\bin\RemoteExchange.ps1
+Connect-ExchangeServer -auto
 
-Import-csv $csv |Foreach {Add-MailboxPermission $_.UserPrincipalName -User "Administrator@domain.local" -AccessRight FullAccess -InheritanceType All -Automapping $false}
+$administrator = 'domain\administrator'
+$password = ConvertTo-SecureString -string $strpassword -AsPlainText -Force
+
+$import = Import-csv $csv
+ 
+ForEach ($u in $import) {
+        New-Mailbox -FirstName $u.FirstName -LastName $u.LastName -Alias $u.Alias -Name $u.name -userPrincipalName $u.UserPrincipalName -SamAccountName $u.alias -Database $u.Database -OrganizationalUnit $u.OrganizationalUnit -Password $Password -AddressBookPolicy $u.AddressBookPolicy -ResetPasswordOnNextLogon $false
+        Set-Mailbox -Identity $u.Alias -CustomAttribute1 $u.CustomAttribute1 -DefaultPublicFolderMailbox $u.PublicFolderMailbox
+        Add-MailboxPermission -Identity $u.Alias -User $administrator -AccessRight FullAccess -InheritanceType All -Automapping $false
+        }

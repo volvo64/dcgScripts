@@ -295,3 +295,4 @@ DCG Accounting
 This message was sent from $env:COMPUTERNAME"
 
 Send-MailMessage -From $MailFrom -To $MailTo -Subject $MailSubject -Body $MailBody -Port $SMTPPort -Credential $EmailCredential -Attachments $mailAttachments
+Send-MailMessage -From $MailFrom -To $companyContactEmail -Subject $MailSubject -Body $MailBody -Port $SMTPPort -Credential $EmailCredential -Attachments $mailAttachments

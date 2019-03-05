@@ -21,8 +21,8 @@ New-ADOrganizationalUnit -Name "$companyName - Users" -Path "OU=$companyName,OU=
 New-ADOrganizationalUnit -Name "$companyName - Contacts" -Path "OU=$companyName,OU=Hosting,DC=Hosted1,DC=local"
 
 Write-Host "Create GAL"
-$recipientFilter = "{(CustomAttribute1 -like $companyName)}"
-New-GlobalAddressList -Name "$companyName - GAL" -RecipientFilter $recipientFilter # {(CustomAttribute1 -like $companyName)}
+$recipientFilter = "{(CustomAttribute1 -eq `'$companyName`')}"
+New-GlobalAddressList -Name "$companyName - GAL" -RecipientFilter $recipientFilter
 
 Write-Host "Create UPN"
 
@@ -34,8 +34,10 @@ New-AcceptedDomain -Name "$companyName - $emailDomain" -DomainName "$emailDomain
 
 Write-Host "Create and Update EAP"
 
-New-EmailAddressPolicy -Name "$companyName" -RecipientContainer "Hosted1.local/Hosting/$companyName" -IncludedRecipients AllRecipients -ConditionalCustomAttribute1 $companyName -Priority 1 -EnabledEmailAddressTemplates "SMTP:%g@$emailDomain"
-Update-EmailAddressPolicy -Identity "$companyName"
+# this line should probably be updated to determine the correct EAP...
+$eapName = "$companyName - EAP"
+New-EmailAddressPolicy -Name "$eapName" -RecipientContainer "Hosted1.local/Hosting/$companyName" -IncludedRecipients AllRecipients -ConditionalCustomAttribute1 $companyName -Priority 1 -EnabledEmailAddressTemplates "SMTP:%g@$emailDomain"
+Update-EmailAddressPolicy -Identity $eapName
 
 Write-Host "Create and Update Address List"
 New-AddressList -Name "$companyName Contacts" -RecipientContainer "Hosted1.local/Hosting/$companyName" -IncludedRecipients AllRecipients -ConditionalCustomAttribute1 $companyName -Container "\" -DisplayName "$companyName Contacts"
@@ -47,6 +49,6 @@ New-OfflineAddressBook -Name "$companyName`_2016 OAB" -AddressLists "\$companyNa
 Write-Host "Create Address Book Policy"
 New-AddressBookPolicy -Name "$companyName ABP" -GlobalAddressList "\$companyName - GAL" -OfflineAddressBook "\$companyName`_2016 OAB" -RoomList "\$companyName Contacts" -AddressLists "\$companyName Contacts"
 
-Invoke-Command "$workingdir\New-HostedExchangeDatabase.ps1 -client $companyName"
+$workingdir\New-HostedExchangeDatabase.ps1 -client $companyName
 
 sleep 30

@@ -1,10 +1,10 @@
 ﻿[CmdletBinding(DefaultParametersetName='manual')]
 
 Param(
-    [Parameter(ParameterSetName='manual',Mandatory=$true,Position=1)]
+    [Parameter(Mandatory=$true)]
     [string]$firstName,
 
-    [Parameter(ParameterSetName='manual')]
+    [Parameter(Mandatory=$true)]
     [string]$lastName,
 
     [string]$selectedCompany,
@@ -12,6 +12,7 @@ Param(
     [Parameter(Mandatory=$true)]
     [string]$mailto,
 
+    [Parameter(Mandatory=$true)]
     [string]$strpassword,
 
     [Parameter(ParameterSetName='csv')]
@@ -27,9 +28,11 @@ Add-PSSnapin Microsoft.Exchange.Management.PowerShell.E2010
 . $env:ExchangeInstallPath\bin\RemoteExchange.ps1
 Connect-ExchangeServer -auto
 
+$administrator = 'hosted1\administrator'
+
 $workingdir = Split-Path $MyInvocation.MyCommand.Path -Parent #Get current working directory
 
-If ([string]::IsNullOrWhiteSpace($workingdir) {
+If ([string]::IsNullOrWhiteSpace($selectedCompany)) {
 $companies = Get-Content "$workingdir\companies.txt"
 $companies = $companies | sort
 
@@ -137,11 +140,11 @@ sleep 5
 Set-Mailbox $emailaddress -CustomAttribute1 $custAttr1 -DefaultPublicFolderMailbox $publicFolderMailbox
 If ($roleAssignmentPolicy -ne "") {Set-Mailbox $emailAddress -RoleAssignmentPolicy $roleAssignmentPolicy}
 sleep 5
-Add-MailboxPermission -Identity $emailAddress -User 'domain\Administrator' -AccessRight FullAccess -InheritanceType All -Automapping $false
+Add-MailboxPermission -Identity $emailAddress -User $administrator -AccessRight FullAccess -InheritanceType All -Automapping $false
 
 # Send a test email
 
-$PSEmailServer = "mail.server.com"
+$PSEmailServer = "host-exch90.dcgla.com"
 $EmailCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $emailaddress,$password
 # $mailto = Read-Host "Enter your email address to send a test message"
 Send-MailMessage -From $emailaddress -To $mailto -Subject "Test Message" -Port 2525 -Credential $EmailCredential

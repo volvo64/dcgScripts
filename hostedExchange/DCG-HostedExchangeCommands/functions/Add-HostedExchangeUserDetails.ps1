@@ -1,10 +1,10 @@
 ﻿[CmdletBinding()]
 Param(
-    [Parameter(Mandatory = $True, Position = 1)]
-    [string]$csvFile
+    [Parameter(Mandatory=$True,Position=1)]
+        [string]$csvFile
 
     
-)
+    )
 
 
 Start-Transcript

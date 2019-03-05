@@ -14,11 +14,12 @@ Add-PSSnapin Microsoft.Exchange.Management.PowerShell.E2010
 Connect-ExchangeServer -auto
 
 $workingdir = Split-Path $MyInvocation.MyCommand.Path -Parent #Get current working directory
+# $emailContact = Read-Host "What is the email address of the contact?"
 
 $companies = Get-Content "$workingdir\companies.txt"
 $companies = $companies | sort
 
-If ([string]::IsNullOrWhiteSpace($selectedCompany) {
+If ($selectedCompany -eq "") {
 # https://docs.microsoft.com/en-us/powershell/scripting/getting-started/cookbooks/selecting-items-from-a-list-box?view=powershell-6
 
 Add-Type -AssemblyName System.Windows.Forms
