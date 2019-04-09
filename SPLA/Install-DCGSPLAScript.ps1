@@ -78,6 +78,7 @@ $contactName
 $contactEmailAddress
 $adminAcctExclusions
 $rdsGroup
+
 $sslVpnGroup
 $officeGroup
 $blaskGuardGroup
@@ -99,10 +100,11 @@ $ScriptFromGitHub = Invoke-WebRequest https://raw.githubusercontent.com/volvo64/
 Invoke-Expression $($ScriptFromGitHub.Content)'
 
 Add-Content $splaXMLfile '<?xml version="1.0" encoding="UTF-16"?>
-<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+<Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <RegistrationInfo>
     <Date>2019-02-28T14:11:18</Date>
     <Author>dbreeden</Author>
+    <URI>\Run SPLA</URI>
   </RegistrationInfo>
   <Triggers>
     <CalendarTrigger>
@@ -129,12 +131,19 @@ Add-Content $splaXMLfile '<?xml version="1.0" encoding="UTF-16"?>
       </ScheduleByMonth>
     </CalendarTrigger>
   </Triggers>
+  <Principals>
+    <Principal id="Author">
+      <UserId>domain\user</UserId>
+      <LogonType>Password</LogonType>
+      <RunLevel>HighestAvailable</RunLevel>
+    </Principal>
+  </Principals>
   <Settings>
     <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
     <DisallowStartIfOnBatteries>true</DisallowStartIfOnBatteries>
     <StopIfGoingOnBatteries>true</StopIfGoingOnBatteries>
     <AllowHardTerminate>true</AllowHardTerminate>
-    <StartWhenAvailable>false</StartWhenAvailable>
+    <StartWhenAvailable>true</StartWhenAvailable>
     <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
     <IdleSettings>
       <StopOnIdleEnd>true</StopOnIdleEnd>
@@ -144,6 +153,8 @@ Add-Content $splaXMLfile '<?xml version="1.0" encoding="UTF-16"?>
     <Enabled>true</Enabled>
     <Hidden>false</Hidden>
     <RunOnlyIfIdle>false</RunOnlyIfIdle>
+    <DisallowStartOnRemoteAppSession>false</DisallowStartOnRemoteAppSession>
+    <UseUnifiedSchedulingEngine>false</UseUnifiedSchedulingEngine>
     <WakeToRun>false</WakeToRun>
     <ExecutionTimeLimit>P3D</ExecutionTimeLimit>
     <Priority>7</Priority>
@@ -151,7 +162,8 @@ Add-Content $splaXMLfile '<?xml version="1.0" encoding="UTF-16"?>
   <Actions Context="Author">
     <Exec>
       <Command>powershell.exe</Command>
-      <Arguments>-WindowStyle Hidden -NonInteractive -Executionpolicy unrestricted -file C:\dcg\spla\SPLA\Run-SPLAScript.ps1</Arguments>
+      <Arguments>-WindowStyle Hidden -NonInteractive -Executionpolicy unrestricted -file C:\dcg\SPLA\Run-SPLAScript.ps1</Arguments>
+      <WorkingDirectory>c:\dcg\spla</WorkingDirectory>
     </Exec>
   </Actions>
 </Task>'

@@ -7,6 +7,7 @@ $companyName = Get-Content $confFile | Select-Object -Index 0
 $auditType = Get-Content $confFile | Select-Object -Index 1
 $companyContact = Get-Content $confFile | Select-Object -Index 2
 $companyContactEmail = Get-Content $confFile | Select-Object -Index 3
+$now = Get-Date -f yyyy-MM-dd-hh-mm-ss
 
 If ($auditType -match 2) {
     $rdsGroup = @()
@@ -30,9 +31,12 @@ If ($auditType -match 6) {
     Add-Content $logfile "The BlaskGuard group to search is $BlaskGuardGroup"
 }
 
-$filterednames = @("mailmonitor", "mimecast", "guest", "LDAP", "vmware", "dss", "opendns", "sp admin", "dcg", "qbdataservice", "sql", "st_bernard", "hosted", "ldapadmin", "spadmin", "test", "noc", "st. bernard", "st bernard", "managed care", "bbadmin", "besadmin", "compliance", "discovery", "rmmscan", "healthmailbox", "sharepoint", "windows sbs", "qbdata", "noc_helpdesk", "appassure", "scanner", "ftp", "app assure", "aspnet", "Dependable Computer Guys", "efax", "exchange", "INSTALR", "IUSR", "IWAM", "Quick Books")
-$perEnvFilteredNames = get-content $confFile | Select-Object -Index 4
-$perEnvFilteredNames = -split $perEnvFilteredNames
+$filterednames = @("dmarc", "mailmonitor", "mimecast", "guest", "LDAP", "vmware", "dss", "opendns", "sp admin", "dcg", "qbdataservice", "sql", "st_bernard", "hosted", "ldapadmin", "spadmin", "test", "noc", "st. bernard", "st bernard", "managed care", "bbadmin", "besadmin", "compliance", "discovery", "rmmscan", "healthmailbox", "sharepoint", "windows sbs", "qbdata", "noc_helpdesk", "appassure", "scanner", "ftp", "app assure", "aspnet", "Dependable Computer Guys", "efax", "exchange", "INSTALR", "IUSR", "IWAM", "Quick Books")
+$perEnvFilteredNames = Get-Content $confFile | Select-Object -Index 4
+# https://www.reddit.com/r/PowerShell/comments/2h5elx/split_string_by_spaces_unless_in_quotes/
+# splitting so that we can include quotes in per-env filtered names
+# replace at the end to take the quotes out of the final product as that would then go on to mess with the regex
+$perEnvFilteredNames = $perEnvFilteredNames -Split ' +(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)' -replace ("`"", "")
 $filterednames = $filterednames += $perEnvFilteredNames
 $regex = "(" + ($filterednames -join "|") + ")"
 Add-Content $logfile "Filtering out the following names: $filterednames"
@@ -59,17 +63,17 @@ If ($auditType -match 1) {
     
     Add-Content $logfile 'Beginning search of AD users'
 
-    $usernamesraw = (Get-AdUser -filter * |Where-Object {($_.enabled -eq "True")}).name
+    $usernamesraw = (Get-ADUser -filter * | Where-Object { ($_.enabled -eq "True") }).name
 
-    $usernamesfiltered = $usernamesraw | Where-Object {$_ -notmatch $regex}
+    $usernamesfiltered = $usernamesraw | Where-Object { $_ -notmatch $regex }
 
     Add-Content $logfile 'Names of AD users: '
     $usernamesfiltered >> $logfile
     Add-Content $logfile 'Count of AD users: '
     $usernamesfiltered.count >> $logfile
     $usernamesfilteredCount = $usernamesfiltered.count
-    $usernamesfiltered | Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)ADUsers.txt"
-    $adUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)ADUsers.txt"
+    $usernamesfiltered | Sort-Object > "$MyDir\logs\$now`ADUsers.txt"
+    $adUsersAttachment = "$MyDir\logs\$now`ADUsers.txt"
 }
 
 If ($auditType -match 2) {
@@ -81,15 +85,15 @@ If ($auditType -match 2) {
         
         foreach ($groupname in $rdsGroup) {
                     
-            $rdsUsersRaw = (Get-ADGroupMember -Identity $groupname -Recursive | Get-ADUser | Where-Object {($_.enabled -eq "True")}).name
+            $rdsUsersRaw = (Get-ADGroupMember -Identity $groupname -Recursive | Get-ADUser | Where-Object { ($_.enabled -eq "True") }).name
 
-            $rdsUsersFiltered = $rdsUsersRaw | Where-Object {$_ -notmatch $regex}
+            $rdsUsersFiltered = $rdsUsersRaw | Where-Object { $_ -notmatch $regex }
             Add-Content $logfile 'Names of RDS Users:'
             $rdsUsersFiltered >> $logfile
             Add-Content $logfile 'Count of RDS Users:'
             # This count is additive because some clients have multiple RDS groups. The next line adds each iteration of a count to the file.
-            $rdsUsersFiltered |Sort-Object >> "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
-            $rdsUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
+            $rdsUsersFiltered | Sort-Object >> "$MyDir\logs\$now`RemoteDesktopUsers.txt"
+            $rdsUsersAttachment = "$MyDir\logs\$now`RemoteDesktopUsers.txt"
         }
         $rdsUsersFiltered = Get-Content $rdsUsersAttachment | Sort-Object -Unique
         $rdsUsersFiltered > $rdsUsersAttachment
@@ -99,19 +103,19 @@ If ($auditType -match 2) {
         Add-Content $logfile "Server is part of a workgroup"
         Add-Content $logfile "Beginning search for RDS Users."
 
-        $rdsUsersRaw = (Get-LocalUser| Where-Object {($_.enabled -eq "True")}).name
-        $rdsUsersFiltered = $rdsUsersRaw | Where-Object {$_ -notmatch $regex}
+        $rdsUsersRaw = (Get-LocalUser | Where-Object { ($_.enabled -eq "True") }).name
+        $rdsUsersFiltered = $rdsUsersRaw | Where-Object { $_ -notmatch $regex }
         Add-Content $logfile 'Names of RDS Users:'
         $rdsUsersFiltered >> $logfile
         Add-Content $logfile 'Count of RDS Users:'
         $rdsUsersFiltered.count >> $logfile
         $rdsUsersFilteredCount = $rdsUsersFiltered.count
         # This count is additive because some clients have multiple RDS groups. The next line adds each iteration of a count to the file.
-        $rdsUsersFiltered |Sort-Object >> "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
-        $rdsUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)RemoteDesktopUsers.txt"
+        $rdsUsersFiltered | Sort-Object >> "$MyDir\logs\$now`RemoteDesktopUsers.txt"
+        $rdsUsersAttachment = "$MyDir\logs\$now`RemoteDesktopUsers.txt"
     }
     $rdsUsersFilteredCount = 0 
-    get-content $rdsUsersAttachment | foreach-object {$rdsUsersFilteredCount++}
+    Get-Content $rdsUsersAttachment | ForEach-Object { $rdsUsersFilteredCount++ }
 }
     
 
@@ -120,15 +124,15 @@ If ($auditType -match 3) {
     
     Add-Content $logfile 'Beginning search of Exchange mailboxes.'
     
-    $mailAccountsRaw = ((Get-Mailbox -ResultSize Unlimited -WarningAction SilentlyContinue).emailaddresses | Where-Object PrefixString -CEQ SMTP| Select-Object SmtpAddress)
-    $mailAccountsFiltered = $mailAccountsRaw | Where-Object {$_ -notmatch $regex}
+    $mailAccountsRaw = ((Get-Mailbox -ResultSize Unlimited -WarningAction SilentlyContinue).emailaddresses | Where-Object PrefixString -CEQ SMTP | Select-Object SmtpAddress)
+    $mailAccountsFiltered = $mailAccountsRaw | Where-Object { $_ -notmatch $regex }
     Add-Content $logfile 'Names of Exchange mailboxes:'
     $mailAccountsFiltered >> $logfile
     Add-Content $logfile 'Count of Exchange mailboxes:'
     $mailAccountsFiltered.count >> $logfile
     $mailAccountsFilteredCount = $mailAccountsFiltered.Count
-    $mailAccountsFiltered | Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)ExchangeUsers.txt"
-    $exchangeUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)ExchangeUsers.txt"
+    $mailAccountsFiltered | Sort-Object > "$MyDir\logs\$now`ExchangeUsers.txt"
+    $exchangeUsersAttachment = "$MyDir\logs\$now`ExchangeUsers.txt"
 }
 
 If ($auditType -match 5) {
@@ -137,31 +141,31 @@ If ($auditType -match 5) {
     If ((Get-WmiObject -Class Win32_ComputerSystem).PartOfDomain -eq "True") {
         Add-Content $logfile "Server is part of a domain"
         
-        $officeUsersRaw = (Get-ADGroupMember -Identity $officeGroup | Get-ADUser | Where-Object {($_.enabled -eq "True")}).name
+        $officeUsersRaw = (Get-ADGroupMember -Identity $officeGroup | Get-ADUser | Where-Object { ($_.enabled -eq "True") }).name
 
-        $officeUsersFiltered = $officeUsersRaw | Where-Object {$_ -notmatch $regex}
+        $officeUsersFiltered = $officeUsersRaw | Where-Object { $_ -notmatch $regex }
         Add-Content $logfile 'Names of Office Users:'
         $officeUsersFiltered >> $logfile
         Add-Content $logfile 'Count of Office Users:'
         $officeUsersFiltered.count >> $logfile
         $officeUsersFilteredCount = $officeUsersFiltered.count
-        $officeUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)OfficeUsers.txt"
-        $officeUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)OfficeUsers.txt"
+        $officeUsersFiltered | Sort-Object > "$MyDir\logs\$now`OfficeUsers.txt"
+        $officeUsersAttachment = "$MyDir\logs\$now`OfficeUsers.txt"
     }
 
     Else {
         Add-Content $logfile "Server is part of a workgroup"
         Add-Content $logfile "Beginning search for Office Users."
 
-        $officeUsersRaw = (Get-LocalUser| Where-Object {($_.enabled -eq "True")}).name
-        $officeUsersFiltered = $officeUsersRaw | Where-Object {$_ -notmatch $regex}
+        $officeUsersRaw = (Get-LocalUser | Where-Object { ($_.enabled -eq "True") }).name
+        $officeUsersFiltered = $officeUsersRaw | Where-Object { $_ -notmatch $regex }
         Add-Content $logfile 'Names of Office Users:'
         $officeUsersFiltered >> $logfile
         Add-Content $logfile 'Count of Office Users:'
         $officeUsersFiltered.count >> $logfile
         $officeUsersFilteredCount = $officeUsersFiltered.count
-        $officeUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)OfficeUsers.txt"
-        $officeUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)OfficeUsers.txt"
+        $officeUsersFiltered | Sort-Object > "$MyDir\logs\$now`OfficeUsers.txt"
+        $officeUsersAttachment = "$MyDir\logs\$now`OfficeUsers.txt"
     }
 }
 
@@ -174,31 +178,31 @@ If ($auditType -match 6) {
     If ((Get-WmiObject -Class Win32_ComputerSystem).PartOfDomain -eq "True") {
         Add-Content $logfile "Server is part of a domain"
         
-        $BlaskGuardUsersRaw = (Get-ADGroupMember -Identity $BlaskGuardGroup | Get-ADUser | Where-Object {($_.enabled -eq "True")}).name
+        $BlaskGuardUsersRaw = (Get-ADGroupMember -Identity $BlaskGuardGroup | Get-ADUser | Where-Object { ($_.enabled -eq "True") }).name
 
-        $BlaskGuardUsersFiltered = $BlaskGuardUsersRaw | Where-Object {$_ -notmatch $regex}
+        $BlaskGuardUsersFiltered = $BlaskGuardUsersRaw | Where-Object { $_ -notmatch $regex }
         Add-Content $logfile 'Names of BlaskGuard Users:'
         $BlaskGuardUsersFiltered >> $logfile
         Add-Content $logfile 'Count of BlaskGuard Users:'
         $BlaskGuardUsersFiltered.count >> $logfile
         $BlaskGuardUsersFilteredCount = $BlaskGuardUsersFiltered.count
-        $BlaskGuardUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)BlaskGuardUsers.txt"
-        $BlaskGuardUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)BlaskGuardUsers.txt"
+        $BlaskGuardUsersFiltered | Sort-Object > "$MyDir\logs\$now`BlaskGuardUsers.txt"
+        $BlaskGuardUsersAttachment = "$MyDir\logs\$now`BlaskGuardUsers.txt"
     }
 
     Else {
         Add-Content $logfile "Server is part of a workgroup"
         Add-Content $logfile "Beginning search for BlaskGuard Users."
 
-        $BlaskGuardUsersRaw = (Get-LocalUser| Where-Object {($_.enabled -eq "True")}).name
-        $BlaskGuardUsersFiltered = $BlaskGuardUsersRaw | Where-Object {$_ -notmatch $regex}
+        $BlaskGuardUsersRaw = (Get-LocalUser | Where-Object { ($_.enabled -eq "True") }).name
+        $BlaskGuardUsersFiltered = $BlaskGuardUsersRaw | Where-Object { $_ -notmatch $regex }
         Add-Content $logfile 'Names of BlaskGuard Users:'
         $BlaskGuardUsersFiltered >> $logfile
         Add-Content $logfile 'Count of BlaskGuard Users:'
         $BlaskGuardUsersFiltered.count >> $logfile
         $BlaskGuardUsersFilteredCount = $BlaskGuardUsersFiltered.count
-        $BlaskGuardUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)BlaskGuardUsers.txt"
-        $BlaskGuardUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)BlaskGuardUsers.txt"
+        $BlaskGuardUsersFiltered | Sort-Object > "$MyDir\logs\$now`BlaskGuardUsers.txt"
+        $BlaskGuardUsersAttachment = "$MyDir\logs\$now`BlaskGuardUsers.txt"
     }
 }
     
@@ -206,16 +210,16 @@ If ($auditType -match 7) {
     
     Add-Content $logfile 'Beginning search of SSL VPN Users.'
         
-    $sslvpnUsersRaw = (Get-ADGroupMember -Identity $sslvpnGroup | Get-ADUser | Where-Object {($_.enabled -eq "True")}).name
+    $sslvpnUsersRaw = (Get-ADGroupMember -Identity $sslvpnGroup | Get-ADUser | Where-Object { ($_.enabled -eq "True") }).name
 
-    $sslvpnUsersFiltered = $sslvpnUsersRaw | Where-Object {$_ -notmatch $regex}
+    $sslvpnUsersFiltered = $sslvpnUsersRaw | Where-Object { $_ -notmatch $regex }
     Add-Content $logfile 'Names of SSL VPN Users:'
     $sslvpnUsersFiltered >> $logfile
     Add-Content $logfile 'Count of SSL VPN Users:'
     $sslvpnUsersFiltered.count >> $logfile
     $sslvpnUsersFilteredCount = $sslvpnUsersFiltered.count
-    $sslvpnUsersFiltered |Sort-Object > "$MyDir\logs\$(get-date -f yyyy-MM-dd)SSLVPNUsers.txt"
-    $sslvpnUsersAttachment = "$MyDir\logs\$(get-date -f yyyy-MM-dd)SSLVPNUsers.txt"
+    $sslvpnUsersFiltered | Sort-Object > "$MyDir\logs\$now`SSLVPNUsers.txt"
+    $sslvpnUsersAttachment = "$MyDir\logs\$now`SSLVPNUsers.txt"
 }
 
 $MailSubject = "$companyContact, Please review $companyName's DCG PrivateCLOUD SPLA counts before $Month 15th"

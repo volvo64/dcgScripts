@@ -7,3 +7,4 @@ IEC/Analyze-Files.ps1
 hostedExchange/DCG-HostedExchangeCommands/functions/Get-MailboxReport.ps1
 hostedExchange/DCG-HostedExchangeCommands/EmailContactImport.csv
 hostedExchange/DCG-HostedExchangeCommands/EmailContactImport.csv
+*.json
