@@ -296,7 +296,9 @@ Thank you very much for taking the time to review these reports with us
 
 DCG Accounting
 
-This message was sent from $env:COMPUTERNAME"
+This message was sent from $env:COMPUTERNAME
+
+This message was sent from an unmonitored mailbox and cannot accept replies. Please send all replies to dispatch@dcgla.com"
 
 Send-MailMessage -From $MailFrom -To $MailTo -Subject $MailSubject -Body $MailBody -Port $SMTPPort -Credential $EmailCredential -Attachments $mailAttachments
 Send-MailMessage -From $MailFrom -To $companyContactEmail -Subject $MailSubject -Body $MailBody -Port $SMTPPort -Credential $EmailCredential -Attachments $mailAttachments

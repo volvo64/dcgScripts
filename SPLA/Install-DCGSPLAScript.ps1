@@ -1,4 +1,6 @@
 ﻿<# create SPLA script#>
+#Requires -Version 5
+#Requires -RunAsAdministrator
 
 [CmdletBinding()]
 
@@ -45,6 +47,9 @@ $splaXMLfile = "$rootDir\spla.xml"
 $scriptSender = "scriptsender@dcgla.net"
 $EncryptedPasswordFile = "$rootDir\$scriptSender.securestring"
 
+#Install-PackageProvider -Name NuGet -Force
+#Install-Module -Name Invoke-CommandAs -Force
+
 New-Item -ItemType Directory "$rootDir\$logsDir" -Force
 New-Item -ItemType File $companyFile, $scriptRunner,$splaXMLfile -Force
 
@@ -84,6 +89,7 @@ $officeGroup
 $blaskGuardGroup
 $exchangePlusUsersCount"
 
+
 If ([string]::IsNullOrWhiteSpace($insecureScriptSenderPassword)) {
     Read-Host -Prompt "Input password for $scriptSender" -AsSecureString | 
     ConvertFrom-SecureString | 
@@ -100,7 +106,7 @@ $ScriptFromGitHub = Invoke-WebRequest https://raw.githubusercontent.com/volvo64/
 Invoke-Expression $($ScriptFromGitHub.Content)'
 
 Add-Content $splaXMLfile '<?xml version="1.0" encoding="UTF-16"?>
-<Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <RegistrationInfo>
     <Date>2019-02-28T14:11:18</Date>
     <Author>dbreeden</Author>
@@ -133,9 +139,9 @@ Add-Content $splaXMLfile '<?xml version="1.0" encoding="UTF-16"?>
   </Triggers>
   <Principals>
     <Principal id="Author">
-      <UserId>domain\user</UserId>
+      <UserId>S-1-5-21-1616510491-1821078637-2087108206-1156</UserId>
       <LogonType>Password</LogonType>
-      <RunLevel>HighestAvailable</RunLevel>
+      <RunLevel>LeastPrivilege</RunLevel>
     </Principal>
   </Principals>
   <Settings>
@@ -153,10 +159,8 @@ Add-Content $splaXMLfile '<?xml version="1.0" encoding="UTF-16"?>
     <Enabled>true</Enabled>
     <Hidden>false</Hidden>
     <RunOnlyIfIdle>false</RunOnlyIfIdle>
-    <DisallowStartOnRemoteAppSession>false</DisallowStartOnRemoteAppSession>
-    <UseUnifiedSchedulingEngine>false</UseUnifiedSchedulingEngine>
     <WakeToRun>false</WakeToRun>
-    <ExecutionTimeLimit>P3D</ExecutionTimeLimit>
+    <ExecutionTimeLimit>PT72H</ExecutionTimeLimit>
     <Priority>7</Priority>
   </Settings>
   <Actions Context="Author">
